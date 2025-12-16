@@ -3,9 +3,9 @@
 
 ![Staging Plan](https://github.com/lrasata/infra-file-uploader/actions/workflows/plan-pr-to-staging.yml/badge.svg)
 
-![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
-
 ![Ephemeral Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
+
+![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
 
 ## Overview
 
@@ -50,9 +50,9 @@ module "file_uploader" {
 }
 ```
 
-### Access object in S3 private uploads bucket
+### Accessing object in S3 private uploads bucket
 
-This section only describes a suggestion or recommendation. But how you decide to access S3 private uploads bucket
+This section only describes a recommendation. But how you decide to access S3 private uploads bucket
 depends on your project requirements.
 
 One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access
@@ -103,6 +103,20 @@ origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 - **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
 - **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.). It also blocks
   any unauthorised requests which do not contain required auth header.
+
+#### Secure access to presigned URL API
+
+To prevent unauthorized clients from requesting presigned upload URLs, the API Gateway endpoint is **not exposed directly**.
+
+Requests to the presigned URL endpoint are expected to go through **CloudFront**, which injects a secret header (`API_GW_AUTH_SECRET`) into each request.  
+API Gateway validates this header and rejects any request that does not contain the expected value.
+
+This ensures:
+- The presigned URL API cannot be called directly from the public internet
+- Only trusted CloudFront distributions can access the endpoint
+- The secret never reaches the client
+
+As a future improvement, **Amazon Cognito** can be enabled optionally to add user-level authentication and authorization if stronger identity guarantees are required.
 
 ### Reliability
 
