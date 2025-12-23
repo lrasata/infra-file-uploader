@@ -7,5 +7,5 @@ data "aws_secretsmanager_secret_version" "file_upload_secrets_value" {
 }
 
 locals {
-  auth_secret = jsondecode(data.aws_secretsmanager_secret_version.file_upload_secrets_value.secret_string)["API_GW_AUTH_SECRET"]
+  auth_secret = jsondecode(data.aws_secretsmanager_secret_version.file_upload_secrets_value.secret_string)["API_GW_FILE_UPLOAD_AUTH_SECRET"]
 }
