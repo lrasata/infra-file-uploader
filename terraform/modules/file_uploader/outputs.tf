@@ -22,3 +22,8 @@ output "dynamo_db_table_name" {
   description = "The name of the DynamoDB table"
   value       = module.dynamodb.files_metadata_table_name
 }
+
+output "dynamo_db_table_arn" {
+  description = "The ARN of the DynamoDB table"
+  value       = module.dynamodb.files_metadata_table_arn
+}
