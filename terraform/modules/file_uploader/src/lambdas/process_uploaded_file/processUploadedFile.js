@@ -52,7 +52,7 @@ exports.handler = async (event) => {
             const message = JSON.parse(snsMessage);
 
             bucket = message.bucket;
-            fileKey = message.key;
+            fileKey = decodeURIComponent(message.key);
 
             const uploadFolder = UPLOAD_FOLDER.trim().toLowerCase();
             const keyLower = fileKey.toLowerCase();
@@ -69,7 +69,7 @@ exports.handler = async (event) => {
         } else {
             // Simple S3 trigger
             bucket = event.Records[0].s3.bucket.name;
-            fileKey = event.Records[0].s3.object.key;
+            fileKey = decodeURIComponent(event.Records[0].s3.object.key);
         }
 
         // ------------ Parse Key: uploads/trips/1/background.png ------------
