@@ -57,7 +57,7 @@ resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
     allowed_origins = ["*"]
     allowed_headers = ["*"]
     expose_headers  = ["ETag"]
-    max_age_seconds = 3000
+    max_age_seconds = 3000 # TODO check this and variabilize
   }
 
   depends_on = [aws_s3_bucket_public_access_block.uploads_public_access]
