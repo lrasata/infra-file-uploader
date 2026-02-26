@@ -67,8 +67,8 @@ module "api_gateway" {
   backend_certificate_arn     = var.backend_certificate_arn
 
   # Lambda integration
-  upload_file_lambda_arn           = module.lambda_functions["upload_file"].function_name
-  upload_file_lambda_function_name = module.lambda_functions["upload_file"].function_arn
+  upload_file_lambda_arn           = module.lambda_functions["upload_file"].function_arn
+  upload_file_lambda_function_name = module.lambda_functions["upload_file"].function_name
 
   sns_topic_arn = module.sns.sns_topic_alerts_arn
 
