@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk");
+const crypto = require("crypto");
 
 const REGION = process.env.REGION || "eu-central-1";
 const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
