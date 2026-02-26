@@ -70,7 +70,7 @@ exports.handler = async (event) => {
     const { ContentType, Body, ContentLength, Metadata } = await S3.getObject({
       Bucket: bucket,
       Key: fileKey,
-    });
+    }).promise();
 
     let thumbKey = null;
 
@@ -108,7 +108,7 @@ exports.handler = async (event) => {
         FilterExpression: "#res = :res AND #id = :id AND selected = :trueVal",
         ExpressionAttributeNames: { "#res": "resource", "#id": "id" },
         ExpressionAttributeValues: { ":res": apiResource, ":id": partitionKey, ":trueVal": true },
-      });
+      }).promise();
 
       const items = existing.Items || [];
 
@@ -137,7 +137,7 @@ exports.handler = async (event) => {
         },
       });
 
-      await DynamoDB.transactWrite({ TransactItems: transactItems });
+      await DynamoDB.transactWrite({ TransactItems: transactItems }).promise();
       await emitMetric("DynamoWrites", 1, "Count", NAMESPACE_METADATA_WRITER);
     } catch (err) {
       console.error("DynamoDB error:", err);
