@@ -45,6 +45,7 @@ exports.handler = async (event) => {
 
   const headers = event.headers || {};
   const customHeader = headers["x-api-gateway-file-upload-auth"];
+  const mimeType = headers["Content-Type"];
 
   if (customHeader !== API_GW_AUTH_SECRET) {
     return {
@@ -80,9 +81,10 @@ exports.handler = async (event) => {
       Bucket: BUCKET_NAME,
       Key: fileKey,
       Expires: EXPIRATION_TIME_S,
-        Metadata: {
-          originalfilename: originalFilename
-        }
+      ContentType: mimeType,
+      Metadata: {
+        originalfilename: originalFilename
+      }
     });
 
     await emitMetric("PresignURLSuccess");

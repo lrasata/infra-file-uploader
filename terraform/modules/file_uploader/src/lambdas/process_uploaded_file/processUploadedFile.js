@@ -110,7 +110,9 @@ exports.handler = async (event) => {
         ExpressionAttributeValues: { ":res": apiResource, ":id": partitionKey, ":trueVal": true },
       });
 
-      const transactItems = existing.Items.map((item) => ({
+      const items = existing.Items || [];
+
+      const transactItems = items.map((item) => ({
         Update: {
           TableName: TABLE_NAME,
           Key: { id: item.id, file_key: item.file_key },
