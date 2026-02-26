@@ -67,7 +67,7 @@ export const handler = async (event) => {
     const filename = keyParts[keyParts.length - 1];
 
     // Download file
-    const { ContentType, Body } = await S3.getObject({
+    const { ContentType, Body, ContentLength, Metadata } = await S3.getObject({
       Bucket: bucket,
       Key: fileKey,
     });
@@ -120,7 +120,19 @@ export const handler = async (event) => {
       }));
 
       transactItems.push({
-        Put: { TableName: TABLE_NAME, Item: { id: partitionKey, file_key: fileKey, resource: apiResource, thumbnail_key: thumbKey, selected: true } },
+        Put: {
+        TableName: TABLE_NAME,
+        Item: {
+            id: partitionKey,
+            resource: apiResource,
+            file_key: fileKey,
+            thumbnail_key: thumbKey,
+            filename: Metadata?.originalfilename;
+            uploaded_timestamp: new Date().toISOString(),
+            file_size: ContentLength,
+            selected: true
+          }
+        },
       });
 
       await DynamoDB.transactWrite({ TransactItems: transactItems });

@@ -57,13 +57,11 @@ exports.handler = async (event) => {
   const query = event.queryStringParameters || {};
   const partitionKey = query[PARTITION_KEY];
   const originalFilename = query[SORT_KEY];
-  const extension = query.ext;
   const apiResource = query.resource;
 
   const missingParams = [];
   if (!partitionKey) missingParams.push(PARTITION_KEY);
   if (!originalFilename) missingParams.push(SORT_KEY);
-  if (!extension) missingParams.push("ext");
   if (!apiResource) missingParams.push("resource");
 
   if (missingParams.length > 0) {
@@ -76,12 +74,15 @@ exports.handler = async (event) => {
 
   try {
     const randomId = crypto.randomBytes(16).toString("base64url");
-    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}${extension ? "." + extension : ""}`;
+    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}`;
 
     const presignedUrl = s3.getSignedUrl("putObject", {
       Bucket: BUCKET_NAME,
       Key: fileKey,
-      Expires: EXPIRATION_TIME_S
+      Expires: EXPIRATION_TIME_S,
+        Metadata: {
+          originalfilename: originalFilename
+        }
     });
 
     await emitMetric("PresignURLSuccess");
