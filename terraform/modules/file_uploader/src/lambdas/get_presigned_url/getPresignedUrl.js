@@ -45,7 +45,6 @@ exports.handler = async (event) => {
 
   const headers = event.headers || {};
   const customHeader = headers["x-api-gateway-file-upload-auth"];
-  const mimeType = headers["Content-Type"];
 
   if (customHeader !== API_GW_AUTH_SECRET) {
     return {
@@ -59,6 +58,7 @@ exports.handler = async (event) => {
   const partitionKey = query[PARTITION_KEY];
   const originalFilename = query[SORT_KEY];
   const apiResource = query.resource;
+  const mimeType = query.mimeType;
 
   const missingParams = [];
   if (!partitionKey) missingParams.push(PARTITION_KEY);
