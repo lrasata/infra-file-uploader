@@ -45,7 +45,7 @@ data "archive_file" "lambda_zip" {
 
 resource "aws_lambda_function" "lambda_function" {
   function_name = "${var.environment}-${var.lambda_name}-lambda"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
   handler       = var.handler_file
 
   filename         = data.archive_file.lambda_zip.output_path
