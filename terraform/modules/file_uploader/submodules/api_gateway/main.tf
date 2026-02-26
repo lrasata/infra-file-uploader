@@ -1,5 +1,5 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "${var.environment}-uplaod-file-api"
+  name        = "${var.environment}-upload-file-api"
   description = "API Gateway for requesting pre-signed url to upload file"
 
   tags = {
