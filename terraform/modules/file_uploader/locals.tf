@@ -8,7 +8,7 @@ locals {
     upload_file = {
       base_name    = "upload-file"
       source_dir   = "${path.module}/src/lambdas/upload_file"
-      handler_file = "getPresignedUrl.handler"
+      handler_file = "uploadFile.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
