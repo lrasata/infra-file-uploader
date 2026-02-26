@@ -4,10 +4,10 @@ locals {
 
   # Central configuration map for all Lambdas
   lambda_configs = {
-    # Configuration for GET_PRESIGNED_URL
-    get_presigned_url = {
-      base_name    = "get-presigned-url"
-      source_dir   = "${path.module}/src/lambdas/get_presigned_url"
+    # Configuration for UPLOAD_FILE
+    upload_file = {
+      base_name    = "upload-file"
+      source_dir   = "${path.module}/src/lambdas/upload_file"
       handler_file = "getPresignedUrl.handler"
       excludes     = []
       timeout      = 5
@@ -17,7 +17,7 @@ locals {
         REGION             = var.region
         EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
         UPLOAD_BUCKET      = module.s3_bucket.uploads_bucket_id
-        API_NAME           = "get-presigned-url-api"
+        API_NAME           = "upload-file-api"
         API_GW_AUTH_SECRET = module.secrets.auth_secret
         UPLOAD_FOLDER      = local.upload_folder
         USE_S3_ACCEL       = var.enable_transfer_acceleration

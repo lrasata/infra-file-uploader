@@ -50,7 +50,7 @@ jobs:
       - name: Build Lambda packages (ephemeral)
         run: |
           sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
-          cd terraform/modules/file_uploader/src/lambdas/get_presigned_url
+          cd terraform/modules/file_uploader/src/lambdas/upload_file
           npm ci --silent --no-audit
           cd ../process_uploaded_file
           npm ci --silent --no-audit

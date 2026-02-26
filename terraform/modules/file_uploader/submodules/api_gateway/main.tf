@@ -1,9 +1,9 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "${var.environment}-get-presigned-url-api"
-  description = "API Gateway for requesting pre-signed url"
+  name        = "${var.environment}-uplaod-file-api"
+  description = "API Gateway for requesting pre-signed url to upload file"
 
   tags = {
-    Name        = "${var.environment}-get-presigned-url-api"
+    Name        = "${var.environment}-upload-file-api"
     Environment = var.environment
     App         = var.app_id
   }
@@ -83,13 +83,13 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   type = "AWS_PROXY"
   # even though API method is GET, when using AWS_PROXY the integration must always be "POST"
   integration_http_method = "POST"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.get_presigned_url_lambda_arn}/invocations"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.upload_file_lambda_arn}/invocations"
 }
 
 resource "aws_lambda_permission" "apigw_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = var.get_presigned_url_lambda_function_name
+  function_name = var.upload_file_lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }

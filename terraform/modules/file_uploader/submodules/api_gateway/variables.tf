@@ -19,13 +19,13 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
-variable "get_presigned_url_lambda_function_name" {
-  description = "Name of the get presigned URL Lambda function"
+variable "upload_file_lambda_function_name" {
+  description = "Name of the upload file Lambda function"
   type        = string
 }
 
-variable "get_presigned_url_lambda_arn" {
-  description = "ARN of the get presigned URL Lambda function"
+variable "upload_file_lambda_arn" {
+  description = "ARN of the upload file Lambda function"
   type        = string
 }
 

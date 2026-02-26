@@ -1,11 +1,11 @@
 {
-  "name": "get-presigned-url",
+  "name": "upload-file",
   "version": "1.6.0",
   "description": "",
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "getPresignedUrl.js",
+  "main": "uploadFile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

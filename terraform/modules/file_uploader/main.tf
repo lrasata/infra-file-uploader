@@ -38,7 +38,7 @@ module "secrets" {
 module "lambda_functions" {
   source = "./submodules/lambda_function"
 
-  # for_each to loop over lambda_configs to set up get_presigned_url and process_uploaded_file lambdas
+  # for_each to loop over lambda_configs to set up upload_file and process_uploaded_file lambdas
   for_each = local.lambda_configs
 
   # Pass common variables
@@ -67,8 +67,8 @@ module "api_gateway" {
   backend_certificate_arn     = var.backend_certificate_arn
 
   # Lambda integration
-  get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
-  get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
+  upload_file_lambda_arn           = module.lambda_functions["upload_file"].function_name
+  upload_file_lambda_function_name = module.lambda_functions["upload_file"].function_arn
 
   sns_topic_arn = module.sns.sns_topic_alerts_arn
 
