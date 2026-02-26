@@ -34,7 +34,7 @@ async function emitMetric(metricName, value = 1, unit = "Count", namespace) {
   }
 }
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   try {
     console.log("Incoming event:", JSON.stringify(event, null, 2));
 
@@ -64,7 +64,7 @@ export const handler = async (event) => {
     const keyParts = fileKey.split("/");
     const apiResource = keyParts[1];
     const partitionKey = keyParts[2];
-    const filename = keyParts[keyParts.length - 1];
+    const generatedFilename = keyParts[keyParts.length - 1];
 
     // Download file
     const { ContentType, Body, ContentLength, Metadata } = await S3.getObject({
@@ -82,7 +82,7 @@ export const handler = async (event) => {
         const start = Date.now();
         const thumbnailBuffer = await sharp(Body).resize(200, 200).toBuffer();
 
-        thumbKey = `${THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${filename}`;
+        thumbKey = `${THUMBNAIL_FOLDER}${apiResource}/${partitionKey}/${generatedFilename}`;
         await S3.putObject({
           Bucket: bucket,
           Key: thumbKey,
@@ -127,7 +127,7 @@ export const handler = async (event) => {
             resource: apiResource,
             file_key: fileKey,
             thumbnail_key: thumbKey,
-            filename: Metadata?.originalfilename;
+            filename: Metadata?.originalfilename || generatedFilename,
             uploaded_timestamp: new Date().toISOString(),
             file_size: ContentLength,
             selected: true
