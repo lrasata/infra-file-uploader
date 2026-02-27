@@ -71,9 +71,14 @@ locals {
       # Policy unique to this Lambda
       iam_policy_statements = [
         {
-          Action   = ["s3:GetObject", "s3:PutObject"]
+          Action   = ["s3:GetObject"]
           Effect   = "Allow"
           Resource = ["${module.s3_bucket.uploads_bucket_arn}/*"]
+        },
+        {
+          Effect   = "Allow",
+          Action   = ["dynamodb:Query"],
+          Resource = [module.dynamodb.files_metadata_table_arn]
         },
         {
           Action   = ["secretsmanager:GetSecretValue"]
