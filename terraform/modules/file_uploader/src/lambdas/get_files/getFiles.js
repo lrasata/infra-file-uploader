@@ -7,13 +7,24 @@ const TABLE_NAME = process.env.DYNAMO_TABLE;
 const BUCKET_NAME = process.env.UPLOAD_BUCKET;
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "3600");
 
+const corsHeaders = {
+  "content-type": "application/json",
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "x-api-gateway-file-upload-auth,content-type",
+  "access-control-allow-methods": "GET,OPTIONS,PUT"
+};
+
 exports.handler = async (event) => {
   try {
-    const { id, resource } = event;
+    const query = event.queryStringParameters || {};
+    const id = query.id;
+    const resource = query.resource;
+
 
     if (!id || !resource) {
       return {
         statusCode: 400,
+        headers: corsHeaders,
         body: JSON.stringify({ error: "id and resource are required" }),
       };
     }
@@ -33,8 +44,6 @@ exports.handler = async (event) => {
       },
     };
     const data = await DynamoDB.query(params).promise();
-
-    const imageItem = imageResult.Items?.[0];
 
     if (!data.Items || data.Items.length === 0) {
       return {
@@ -63,6 +72,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
+      headers: corsHeaders,
       body: JSON.stringify({ images }),
     };
 
@@ -70,6 +80,7 @@ exports.handler = async (event) => {
     console.error("Error fetching data:", err);
     return {
       statusCode: 500,
+      headers: corsHeaders,
       body: JSON.stringify({ error: "Internal server error" }),
     };
   }
