@@ -5,7 +5,6 @@ const REGION = process.env.REGION || "eu-central-1";
 const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "300");
-const API_GW_AUTH_SECRET = process.env.API_GW_AUTH_SECRET;
 const API_NAME = process.env.API_NAME || "upload-file-api";
 const PARTITION_KEY = process.env.PARTITION_KEY || "id";
 const SORT_KEY = process.env.SORT_KEY || "file_key";
@@ -42,17 +41,6 @@ async function emitMetric(metricName, value = 1) {
 
 exports.handler = async (event) => {
   await emitMetric("PresignURLRequests");
-
-  const headers = event.headers || {};
-  const customHeader = headers["x-api-gateway-file-upload-auth"];
-
-  if (customHeader !== API_GW_AUTH_SECRET) {
-    return {
-      statusCode: 403,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: "Forbidden: Invalid or missing custom auth header" })
-    };
-  }
 
   const query = event.queryStringParameters || {};
   const partitionKey = query[PARTITION_KEY];

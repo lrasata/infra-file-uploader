@@ -44,6 +44,11 @@ variable "get_files_lambda_arn" {
   type        = string
 }
 
+variable "token_authorizer_arn" {
+  description = "ARN of the api token authorizer Lambda function"
+  type        = string
+}
+
 variable "sns_topic_arn" {
   description = "SNS topic for alarms."
   type        = string

@@ -8,21 +8,20 @@ locals {
     upload_file = {
       base_name    = "upload-file"
       source_dir   = "${path.module}/src/lambdas/upload_file"
-      handler_file = "uploadFile.handler"
+      handler_file = "index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
       # Variables unique to this Lambda
       environment_vars = {
-        REGION             = var.region
-        EXPIRATION_TIME_S  = var.lambda_upload_presigned_url_expiration_time_s
-        UPLOAD_BUCKET      = module.s3_bucket.uploads_bucket_id
-        API_NAME           = "upload-file-api"
-        API_GW_AUTH_SECRET = module.secrets.auth_secret
-        UPLOAD_FOLDER      = local.upload_folder
-        USE_S3_ACCEL       = var.enable_transfer_acceleration
-        PARTITION_KEY      = module.dynamodb.partition_key
-        SORT_KEY           = module.dynamodb.sort_key
+        REGION            = var.region
+        EXPIRATION_TIME_S = var.lambda_upload_presigned_url_expiration_time_s
+        UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
+        API_NAME          = "upload-file-api"
+        UPLOAD_FOLDER     = local.upload_folder
+        USE_S3_ACCEL      = var.enable_transfer_acceleration
+        PARTITION_KEY     = module.dynamodb.partition_key
+        SORT_KEY          = module.dynamodb.sort_key
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
@@ -59,7 +58,7 @@ locals {
     get_files = {
       base_name    = "get-files"
       source_dir   = "${path.module}/src/lambdas/get_files"
-      handler_file = "getFiles.handler"
+      handler_file = "index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -109,7 +108,7 @@ locals {
     process_uploaded_file = {
       base_name    = "process-uploaded-file"
       source_dir   = "${path.module}/src/lambdas/process_uploaded_file"
-      handler_file = "processUploadedFile.handler"
+      handler_file = "index.handler"
       excludes     = ["node_modules/.bin/*"]
       timeout      = 30
       memory_size  = var.lambda_memory_size_mb
@@ -155,6 +154,28 @@ locals {
               ]
             }
           }
+        }
+      ]
+    }
+
+    # Token authorizer
+    token_authorizer = {
+      base_name    = "token-authorizer"
+      source_dir   = "${path.module}/src/lambdas/token_authorizer"
+      handler_file = "index.handler"
+      excludes     = []
+      timeout      = 5
+      memory_size  = 128
+      # Variables unique to this Lambda
+      environment_vars = {
+        API_GW_SECRET_TOKEN = module.secrets.api_token
+      }
+      # Policy unique to this Lambda
+      iam_policy_statements = [
+        {
+          Action   = ["secretsmanager:GetSecretValue"]
+          Effect   = "Allow"
+          Resource = [module.secrets.secret_arn]
         }
       ]
     }

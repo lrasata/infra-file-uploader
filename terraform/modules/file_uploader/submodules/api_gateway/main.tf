@@ -29,6 +29,17 @@ resource "aws_api_gateway_resource" "routes" {
   path_part   = each.key
 }
 
+# API Gateway authorizer
+resource "aws_api_gateway_authorizer" "token_auth" {
+  name                             = "${var.environment}-${var.app_id}-token-auth"
+  rest_api_id                      = aws_api_gateway_rest_api.api.id
+  authorizer_uri                   = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.token_authorizer_arn}/invocations"
+  authorizer_result_ttl_in_seconds = 0
+  identity_source                  = "method.request.header.Authorization"
+  type                             = "TOKEN"
+}
+
+
 # GET Method
 resource "aws_api_gateway_method" "get_methods" {
   for_each      = local.routes
@@ -38,7 +49,7 @@ resource "aws_api_gateway_method" "get_methods" {
   authorization = "NONE"
 
   request_parameters = {
-    "method.request.header.x-api-gateway-file-upload-auth" = true
+    "method.request.header.Authorization" = true
   }
 }
 
