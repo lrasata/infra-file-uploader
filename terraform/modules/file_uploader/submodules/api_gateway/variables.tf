@@ -49,6 +49,11 @@ variable "token_authorizer_arn" {
   type        = string
 }
 
+variable "token_authorizer_function_name" {
+  description = "Name of the token authorizer Lambda function"
+  type        = string
+}
+
 variable "sns_topic_arn" {
   description = "SNS topic for alarms."
   type        = string

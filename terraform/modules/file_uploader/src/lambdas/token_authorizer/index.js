@@ -1,18 +1,29 @@
-import AWS from "aws-sdk";
+const AWS = require("aws-sdk");
 
 const API_GW_SECRET_TOKEN = process.env.API_GW_SECRET_TOKEN;
 
-exports.handler = async function handler(event) {
-  const token = event.authorizationToken;
+exports.handler = async (event) => {
+  const token = event.authorizationToken || "";
 
-  if (token === `Bearer ${API_GW_SECRET_TOKEN}`) {
+  // Strip "Bearer " prefix if present
+  const incomingToken = token.startsWith("Bearer ") ? token.slice(7) : token;
+
+  if (incomingToken === API_GW_SECRET_TOKEN) {
     return {
-      principalId: "user",
+      principalId: "user", // can be any string
       policyDocument: {
         Version: "2012-10-17",
-        Statement: [{ Action: "execute-api:Invoke", Effect: "Allow", Resource: event.methodArn }]
+        Statement: [
+          {
+            Action: "execute-api:Invoke",
+            Effect: "Allow",
+            Resource: event.methodArn
+          }
+        ]
       }
     };
   }
+
+  // Throw an error for denied access
   throw new Error("Unauthorized");
-}
+};

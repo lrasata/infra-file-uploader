@@ -67,12 +67,20 @@ resource "aws_api_gateway_integration" "lambda_integrations" {
 }
 
 # Lambda permission
-resource "aws_lambda_permission" "apigw_permissions" {
+resource "aws_lambda_permission" "apigw_routes_permissions" {
   for_each = local.routes
 
   statement_id  = "AllowAPIGatewayInvoke-${each.key}"
   action        = "lambda:InvokeFunction"
   function_name = each.value.lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_token_authorizer_permissions" {
+  statement_id  = "AllowAPIGatewayInvokeTokenAuth"
+  action        = "lambda:InvokeFunction"
+  function_name = var.token_authorizer_arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
@@ -146,7 +154,8 @@ resource "aws_api_gateway_deployment" "deployment" {
 
   depends_on = [
     aws_api_gateway_integration.lambda_integrations,
-    aws_api_gateway_integration.options_integrations
+    aws_api_gateway_integration.options_integrations,
+    aws_lambda_permission.apigw_token_authorizer_permissions
   ]
 }
 
