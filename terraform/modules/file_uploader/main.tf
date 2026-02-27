@@ -70,6 +70,9 @@ module "api_gateway" {
   upload_file_lambda_arn           = module.lambda_functions["upload_file"].function_arn
   upload_file_lambda_function_name = module.lambda_functions["upload_file"].function_name
 
+  get_files_lambda_arn           = module.lambda_functions["get_files"].function_arn
+  get_files_lambda_function_name = module.lambda_functions["get_files"].function_name
+
   sns_topic_arn = module.sns.sns_topic_alerts_arn
 
   depends_on = [module.lambda_functions]

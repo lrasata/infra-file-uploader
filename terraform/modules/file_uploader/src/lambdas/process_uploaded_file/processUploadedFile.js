@@ -88,7 +88,7 @@ exports.handler = async (event) => {
           Key: thumbKey,
           Body: thumbnailBuffer,
           ContentType,
-        });
+        }).promise();
 
         await emitMetric("ThumbnailGenerated", 1, "Count", NAMESPACE_THUMBNAIL);
         await emitMetric("ThumbnailDuration", Date.now() - start, "Milliseconds", NAMESPACE_THUMBNAIL);
