@@ -24,34 +24,11 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
-variable "upload_file_lambda_function_name" {
-  description = "Name of the upload file Lambda function"
-  type        = string
-}
-
-variable "upload_file_lambda_arn" {
-  description = "ARN of the upload file Lambda function"
-  type        = string
-}
-
-variable "get_files_lambda_function_name" {
-  description = "Name of the get files Lambda function"
-  type        = string
-}
-
-variable "get_files_lambda_arn" {
-  description = "ARN of the get files Lambda function"
-  type        = string
-}
-
-variable "token_authorizer_arn" {
-  description = "ARN of the api token authorizer Lambda function"
-  type        = string
-}
-
-variable "token_authorizer_function_name" {
-  description = "Name of the token authorizer Lambda function"
-  type        = string
+variable "lambdas" {
+  type = map(object({
+    lambda_arn           = string
+    lambda_function_name = string
+  }))
 }
 
 variable "sns_topic_arn" {

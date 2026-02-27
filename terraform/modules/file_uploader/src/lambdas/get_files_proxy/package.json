@@ -1,5 +1,5 @@
 {
-  "name": "token_authorizer",
+  "name": "get_files_proxy",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -10,6 +10,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "aws-sdk": "^2.1692.0"
+    "axios": "^1.6.0"
   }
 }

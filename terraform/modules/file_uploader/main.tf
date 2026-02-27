@@ -56,6 +56,28 @@ module "lambda_functions" {
   iam_policy_statements = each.value.iam_policy_statements
 }
 
+module "lambda_proxies_functions" {
+  source = "./submodules/lambda_function"
+
+  for_each = local.lambda_proxies
+
+  # Pass common variables
+  environment = var.environment
+  app_id      = var.app_id
+
+  # Pass variables specific to the current iteration (key is the map key, value is the map content)
+  lambda_name           = each.value.base_name
+  source_dir            = each.value.source_dir
+  handler_file          = each.value.handler_file
+  excludes              = each.value.excludes
+  timeout               = each.value.timeout
+  memory_size           = each.value.memory_size
+  environment_vars      = each.value.environment_vars
+  iam_policy_statements = each.value.iam_policy_statements
+
+  depends_on = [module.lambda_functions]
+}
+
 # Call the API Gateway submodule
 module "api_gateway" {
   source = "./submodules/api_gateway"
@@ -67,15 +89,26 @@ module "api_gateway" {
   backend_certificate_arn     = var.backend_certificate_arn
 
   # Lambda integration for routes
-  upload_file_lambda_arn           = module.lambda_functions["upload_file"].function_arn
-  upload_file_lambda_function_name = module.lambda_functions["upload_file"].function_name
+  lambdas = {
+    "upload-url" = {
+      lambda_arn           = module.lambda_functions["upload_file"].function_arn
+      lambda_function_name = module.lambda_functions["upload_file"].function_name
+    }
+    "files" = {
+      lambda_arn           = module.lambda_functions["get_files"].function_arn
+      lambda_function_name = module.lambda_functions["get_files"].function_name
+    }
 
-  get_files_lambda_arn           = module.lambda_functions["get_files"].function_arn
-  get_files_lambda_function_name = module.lambda_functions["get_files"].function_name
-
-  # Lambda token authorizer
-  token_authorizer_arn           = module.lambda_functions["token_authorizer"].function_arn
-  token_authorizer_function_name = module.lambda_functions["token_authorizer"].function_name
+    # Proxy endpoints
+    "upload-proxy" = {
+      lambda_arn           = module.lambda_proxies_functions["upload_proxy"].function_arn
+      lambda_function_name = module.lambda_proxies_functions["upload_proxy"].function_name
+    }
+    "get-files-proxy" = {
+      lambda_arn           = module.lambda_proxies_functions["get_files_proxy"].function_arn
+      lambda_function_name = module.lambda_proxies_functions["get_files_proxy"].function_name
+    }
+  }
 
   sns_topic_arn = module.sns.sns_topic_alerts_arn
 

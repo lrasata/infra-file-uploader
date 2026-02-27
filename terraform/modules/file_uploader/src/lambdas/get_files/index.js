@@ -10,12 +10,28 @@ const EXPIRATION_TIME_S = parseInt(process.env.EXPIRATION_TIME_S || "3600");
 const corsHeaders = {
   "content-type": "application/json",
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "x-api-gateway-file-upload-auth,content-type",
-  "access-control-allow-methods": "GET,OPTIONS,PUT"
+  "access-control-allow-headers": "content-type",
+  "access-control-allow-methods": "GET,OPTIONS"
 };
 
 exports.handler = async (event) => {
   try {
+
+    // Validate Bearer token
+    const headers = event.headers || {};
+    const authHeader = headers.Authorization || headers.authorization;
+
+    const EXPECTED_TOKEN = process.env.API_GW_SECRET_TOKEN;
+
+    if (!authHeader || authHeader !== `Bearer ${EXPECTED_TOKEN}`) {
+        await emitMetric("PresignURLUnauthorized");
+        return {
+          statusCode: 401,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: "Unauthorized" })
+        };
+    }
+
     const query = event.queryStringParameters || {};
     const id = query.id;
     const resource = query.resource;
@@ -49,6 +65,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 404,
         body: JSON.stringify({ error: "No images found" }),
+        headers: corsHeaders,
       };
     }
 

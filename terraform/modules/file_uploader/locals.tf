@@ -2,7 +2,51 @@ locals {
   upload_folder    = "uploads/"
   thumbnail_folder = "thumbnails/"
 
-  # Central configuration map for all Lambdas
+  lambda_proxies = {
+    # Lambda proxy for upload
+    upload_proxy = {
+      base_name    = "upload-proxy"
+      source_dir   = "${path.module}/src/lambdas/upload_proxy"
+      handler_file = "index.handler"
+      excludes     = []
+      timeout      = 5
+      memory_size  = 128
+      environment_vars = {
+        UPSTREAM_UPLOAD_FILE_ENDPOINT = "https://${var.api_file_upload_domain_name}/upload-url"
+        API_GW_SECRET_TOKEN           = module.secrets.api_token
+      }
+      iam_policy_statements = [
+        {
+          Effect   = "Allow"
+          Action   = ["lambda:InvokeFunction"]
+          Resource = [module.lambda_functions["upload_file"].function_arn]
+        }
+      ]
+    }
+
+    # Lambda proxy for upload
+    get_files_proxy = {
+      base_name    = "get-files-proxy"
+      source_dir   = "${path.module}/src/lambdas/get_files_proxy"
+      handler_file = "index.handler"
+      excludes     = []
+      timeout      = 5
+      memory_size  = 128
+      environment_vars = {
+        UPSTREAM_GET_FILES_ENDPOINT = "https://${var.api_file_upload_domain_name}/files"
+        API_GW_SECRET_TOKEN         = module.secrets.api_token
+      }
+      iam_policy_statements = [
+        {
+          Effect   = "Allow"
+          Action   = ["lambda:InvokeFunction"]
+          Resource = [module.lambda_functions["get_files"].function_arn]
+        }
+      ]
+    }
+  }
+
+  # Central configuration map for all Lambdas which are not proxies
   lambda_configs = {
     # Configuration for UPLOAD_FILE
     upload_file = {
@@ -14,14 +58,15 @@ locals {
       memory_size  = 128
       # Variables unique to this Lambda
       environment_vars = {
-        REGION            = var.region
-        EXPIRATION_TIME_S = var.lambda_upload_presigned_url_expiration_time_s
-        UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
-        API_NAME          = "upload-file-api"
-        UPLOAD_FOLDER     = local.upload_folder
-        USE_S3_ACCEL      = var.enable_transfer_acceleration
-        PARTITION_KEY     = module.dynamodb.partition_key
-        SORT_KEY          = module.dynamodb.sort_key
+        REGION              = var.region
+        EXPIRATION_TIME_S   = var.lambda_upload_presigned_url_expiration_time_s
+        UPLOAD_BUCKET       = module.s3_bucket.uploads_bucket_id
+        API_NAME            = "upload-file-api"
+        UPLOAD_FOLDER       = local.upload_folder
+        USE_S3_ACCEL        = var.enable_transfer_acceleration
+        PARTITION_KEY       = module.dynamodb.partition_key
+        SORT_KEY            = module.dynamodb.sort_key
+        API_GW_SECRET_TOKEN = module.secrets.api_token
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
@@ -64,9 +109,10 @@ locals {
       memory_size  = 128
       # Variables unique to this Lambda
       environment_vars = {
-        DYNAMO_TABLE      = module.dynamodb.files_metadata_table_name
-        UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
-        EXPIRATION_TIME_S = var.lambda_get_files_presigned_url_expiration_time_s
+        DYNAMO_TABLE        = module.dynamodb.files_metadata_table_name
+        UPLOAD_BUCKET       = module.s3_bucket.uploads_bucket_id
+        EXPIRATION_TIME_S   = var.lambda_get_files_presigned_url_expiration_time_s
+        API_GW_SECRET_TOKEN = module.secrets.api_token
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
@@ -154,28 +200,6 @@ locals {
               ]
             }
           }
-        }
-      ]
-    }
-
-    # Token authorizer
-    token_authorizer = {
-      base_name    = "token-authorizer"
-      source_dir   = "${path.module}/src/lambdas/token_authorizer"
-      handler_file = "index.handler"
-      excludes     = []
-      timeout      = 5
-      memory_size  = 128
-      # Variables unique to this Lambda
-      environment_vars = {
-        API_GW_SECRET_TOKEN = module.secrets.api_token
-      }
-      # Policy unique to this Lambda
-      iam_policy_statements = [
-        {
-          Action   = ["secretsmanager:GetSecretValue"]
-          Effect   = "Allow"
-          Resource = [module.secrets.secret_arn]
         }
       ]
     }
