@@ -65,8 +65,9 @@ locals {
       memory_size  = 128
       # Variables unique to this Lambda
       environment_vars = {
-        DYNAMO_TABLE  = module.dynamodb.files_metadata_table_name
-        UPLOAD_BUCKET = module.s3_bucket.uploads_bucket_id
+        DYNAMO_TABLE      = module.dynamodb.files_metadata_table_name
+        UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
+        EXPIRATION_TIME_S = var.lambda_get_files_presigned_url_expiration_time_s
       }
       # Policy unique to this Lambda
       iam_policy_statements = [
