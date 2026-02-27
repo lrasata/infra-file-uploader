@@ -7,7 +7,7 @@ locals {
     upload_proxy = {
       base_name    = "upload-proxy"
       source_dir   = "${path.module}/src/lambdas/upload_proxy"
-      handler_file = "index.handler"
+      handler_file = "dist/index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -28,7 +28,7 @@ locals {
     get_files_proxy = {
       base_name    = "get-files-proxy"
       source_dir   = "${path.module}/src/lambdas/get_files_proxy"
-      handler_file = "index.handler"
+      handler_file = "dist/index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -52,7 +52,7 @@ locals {
     upload_file = {
       base_name    = "upload-file"
       source_dir   = "${path.module}/src/lambdas/upload_file"
-      handler_file = "index.handler"
+      handler_file = "dist/index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -103,7 +103,7 @@ locals {
     get_files = {
       base_name    = "get-files"
       source_dir   = "${path.module}/src/lambdas/get_files"
-      handler_file = "index.handler"
+      handler_file = "dist/index.handler"
       excludes     = []
       timeout      = 5
       memory_size  = 128
@@ -154,7 +154,7 @@ locals {
     process_uploaded_file = {
       base_name    = "process-uploaded-file"
       source_dir   = "${path.module}/src/lambdas/process_uploaded_file"
-      handler_file = "index.handler"
+      handler_file = "dist/index.handler"
       excludes     = ["node_modules/.bin/*"]
       timeout      = 30
       memory_size  = var.lambda_memory_size_mb

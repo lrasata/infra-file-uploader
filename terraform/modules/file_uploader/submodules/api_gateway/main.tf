@@ -44,7 +44,7 @@ resource "aws_api_gateway_integration" "lambda_integrations" {
 resource "aws_lambda_permission" "apigw_routes_permissions" {
   for_each = var.lambdas
 
-  statement_id  =  "AllowAPIGatewayInvoke-${replace(each.key, "/", "_")}"
+  statement_id  = "AllowAPIGatewayInvoke-${replace(each.key, "/", "_")}"
   action        = "lambda:InvokeFunction"
   function_name = each.value.lambda_function_name
   principal     = "apigateway.amazonaws.com"

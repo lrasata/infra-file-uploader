@@ -41,33 +41,26 @@ jobs:
 
       - name: Build Lambda packages
         run: |
-          # Install system deps that may be required for native modules (e.g. sharp)
           sudo apt-get update && sudo apt-get install -y build-essential python3 libvips-dev
-
-          # build lambda package for upload_file
           cd terraform/modules/file_uploader/src/lambdas/upload_file
-          npm ci --silent --no-audit
-          ls -la node_modules
-          zip -r ../../../submodules/lambda_function/lambda_upload-file.zip . -x "node_modules/.bin/*"
-
-          # build lambda package for process_uploaded_file
+          npm ci --no-audit --silent
+          npm run build --silent
+          
           cd ../process_uploaded_file
-          npm ci --silent --no-audit
-          ls -la node_modules
-          zip -r ../../../submodules/lambda_function/lambda_process-uploaded-file.zip . -x "node_modules/.bin/*"
-
-      - name: List Lambda package outputs for debugging
-        run: |
-          echo "Current working dir: $(pwd)"
-          echo "Lambda package files:"
-          ls -la terraform/modules/file_uploader/submodules/lambda_function || true
-
-      - name: Verify lambda zip files exist
-        run: |
-          echo "Verify lambda upload-file package"
-          test -f terraform/modules/file_uploader/submodules/lambda_function/lambda_upload-file.zip || (echo 'lambda_upload-file.zip missing' && exit 1)
-          echo "Verify lambda process-uploaded-file package"
-          test -f terraform/modules/file_uploader/submodules/lambda_function/lambda_process-uploaded-file.zip || (echo 'lambda_process-uploaded-file.zip missing' && exit 1)
+          npm ci --no-audit --silent
+          npm run build --silent
+          
+          cd ../get_files
+          npm ci --no-audit --silent
+          npm run build --silent
+          
+          cd ../get_files_proxy
+          npm ci --no-audit --silent
+          npm run build --silent
+          
+          cd ../upload_proxy
+          npm ci --no-audit --silent
+          npm run build --silent
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
