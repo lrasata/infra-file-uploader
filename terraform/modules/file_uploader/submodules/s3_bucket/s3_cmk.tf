@@ -18,19 +18,6 @@ resource "aws_kms_key" "s3_cmk" {
         Resource = "*"
       },
 
-      # Allow GitHub Actions role to manage the key
-      {
-        Sid    = "AllowGithubActions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::387836084035:role/gitHubFileUploader"
-        }
-        Action = [
-          "kms:*" # full key management actions including PutKeyPolicy
-        ]
-        Resource = "*"
-      },
-
       # Allow S3 logging to use the key
       {
         Sid    = "AllowS3Logging"

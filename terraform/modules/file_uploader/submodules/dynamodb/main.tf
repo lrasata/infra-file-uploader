@@ -36,9 +36,7 @@ resource "aws_dynamodb_table" "files_metadata_table" {
 
 }
 
-# ============================================================================
 # MONITORING
-# ============================================================================
 module "monitor_dynamodb" {
   source        = "../monitoring/dynamodb"
   sns_topic_arn = var.sns_topic_alert_arn

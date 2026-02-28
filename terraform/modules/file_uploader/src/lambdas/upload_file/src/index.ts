@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import AWS from "aws-sdk";
 
 const REGION = process.env.REGION || "eu-central-1";
-const BUCKET_NAME = process.env.UPLOAD_BUCKET || "s3-bucket-name";
+const UPLOAD_BUCKET = process.env.UPLOAD_BUCKET || "s3-bucket-name";
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "uploads/";
 const EXPIRATION_TIME_S = Number.parseInt(process.env.EXPIRATION_TIME_S ?? "300", 10);
 const API_NAME = process.env.API_NAME || "upload-file-api";
@@ -85,7 +85,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}`;
 
     const presignedUrl = s3.getSignedUrl("putObject", {
-      Bucket: BUCKET_NAME,
+      Bucket: UPLOAD_BUCKET,
       Key: fileKey,
       Expires: EXPIRATION_TIME_S,
       ContentType: mimeType,

@@ -6,10 +6,10 @@ const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const cloudwatch = new AWS.CloudWatch();
 
-const TABLE_NAME = process.env.DYNAMO_TABLE;
+const DYNAMO_TABLE = process.env.DYNAMO_TABLE;
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "";
 const THUMBNAIL_FOLDER = process.env.THUMBNAIL_FOLDER || "";
-const IS_BUCKETAV_ENABLED = process.env.BUCKET_AV_ENABLED === "true";
+const BUCKET_AV_ENABLED = process.env.BUCKET_AV_ENABLED === "true";
 
 const NAMESPACE_METADATA_WRITER = "Custom/MetadataWriter";
 const NAMESPACE_THUMBNAIL = "Custom/ThumbnailGenerator";
@@ -24,7 +24,7 @@ async function emitMetric(metricName: string, value = 1, unit: "Count" | "Millis
             MetricName: metricName,
             Value: value,
             Unit: unit,
-            Dimensions: [{ Name: "TableName", Value: TABLE_NAME ?? "unknown" }],
+            Dimensions: [{ Name: "TableName", Value: DYNAMO_TABLE ?? "unknown" }],
           },
         ],
       })
@@ -52,7 +52,7 @@ export const handler = async (event: unknown) => {
   try {
     console.log("Incoming event:", JSON.stringify(event, null, 2));
 
-    if (!TABLE_NAME) {
+    if (!DYNAMO_TABLE) {
       console.error("Missing required env var DYNAMO_TABLE");
       return { statusCode: 500, body: "Server misconfigured" };
     }
@@ -60,7 +60,7 @@ export const handler = async (event: unknown) => {
     let bucket = "";
     let fileKey = "";
 
-    if (IS_BUCKETAV_ENABLED) {
+    if (BUCKET_AV_ENABLED) {
       if (!isSnsEvent(event)) {
         console.error("Expected SNS event but got something else");
         return { statusCode: 400, body: "Bad event type" };
@@ -132,7 +132,7 @@ export const handler = async (event: unknown) => {
     const dynamoStart = Date.now();
     try {
       const existing = await DynamoDB.scan({
-        TableName: TABLE_NAME,
+        TableName: DYNAMO_TABLE,
         FilterExpression: "#res = :res AND #id = :id AND selected = :trueVal",
         ExpressionAttributeNames: { "#res": "resource", "#id": "id" },
         ExpressionAttributeValues: { ":res": apiResource, ":id": partitionKey, ":trueVal": true },
@@ -142,7 +142,7 @@ export const handler = async (event: unknown) => {
 
       const transactItems: AWS.DynamoDB.DocumentClient.TransactWriteItemList = items.map((item) => ({
         Update: {
-          TableName: TABLE_NAME,
+          TableName: DYNAMO_TABLE,
           Key: { id: (item as any).id, file_key: (item as any).file_key },
           UpdateExpression: "SET selected = :falseVal",
           ExpressionAttributeValues: { ":falseVal": false },
@@ -151,7 +151,7 @@ export const handler = async (event: unknown) => {
 
       transactItems.push({
         Put: {
-          TableName: TABLE_NAME,
+          TableName: DYNAMO_TABLE,
           Item: {
             id: partitionKey,
             resource: apiResource,

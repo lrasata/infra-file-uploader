@@ -46,14 +46,14 @@ module "lambda_functions" {
   app_id      = var.app_id
 
   # Pass variables specific to the current iteration (key is the map key, value is the map content)
-  lambda_name           = each.value.base_name
-  source_dir            = each.value.source_dir
-  handler_file          = each.value.handler_file
-  excludes              = each.value.excludes
-  timeout               = each.value.timeout
-  memory_size           = each.value.memory_size
-  environment_vars      = each.value.environment_vars
-  iam_policy_statements = each.value.iam_policy_statements
+  lambda_name           = each.value["base_name"]
+  source_dir            = each.value["source_dir"]
+  handler_file          = each.value["handler_file"]
+  excludes              = each.value["excludes"]
+  timeout               = each.value["timeout"]
+  memory_size           = each.value["memory_size"]
+  environment_vars      = each.value["environment_vars"]
+  iam_policy_statements = each.value["iam_policy_statements"]
 }
 
 module "lambda_proxies_functions" {
@@ -66,14 +66,14 @@ module "lambda_proxies_functions" {
   app_id      = var.app_id
 
   # Pass variables specific to the current iteration (key is the map key, value is the map content)
-  lambda_name           = each.value.base_name
-  source_dir            = each.value.source_dir
-  handler_file          = each.value.handler_file
-  excludes              = each.value.excludes
-  timeout               = each.value.timeout
-  memory_size           = each.value.memory_size
-  environment_vars      = each.value.environment_vars
-  iam_policy_statements = each.value.iam_policy_statements
+  lambda_name           = each.value["base_name"]
+  source_dir            = each.value["source_dir"]
+  handler_file          = each.value["handler_file"]
+  excludes              = each.value["excludes"]
+  timeout               = each.value["timeout"]
+  memory_size           = each.value["memory_size"]
+  environment_vars      = each.value["environment_vars"]
+  iam_policy_statements = each.value["iam_policy_statements"]
 
   depends_on = [module.lambda_functions]
 }
@@ -116,7 +116,7 @@ module "api_gateway" {
 
 }
 
-# Call the WAF submodule
+# Call the WAF submodule to be associated with API GW
 module "waf" {
   source = "./submodules/waf"
 
@@ -148,9 +148,7 @@ module "file_scanning" {
   use_bucketav                               = var.use_bucket_av
 }
 
-# ============================================================================
 # MONITORING Lambda functions
-# ============================================================================
 module "monitor_thumbnail_generation_lambda" {
   source      = "./submodules/monitoring/lambda_thumbnail_generator"
   environment = var.environment

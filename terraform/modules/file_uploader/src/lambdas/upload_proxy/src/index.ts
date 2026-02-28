@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import axios from "axios";
 
-const API_TOKEN = process.env.API_GW_SECRET_TOKEN;
+const API_GW_SECRET_TOKEN = process.env.API_GW_SECRET_TOKEN;
 const UPLOAD_FILE_ENDPOINT = process.env.UPSTREAM_UPLOAD_FILE_ENDPOINT;
 
 const corsHeaders: Record<string, string> = {
@@ -26,10 +26,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
   }
 
-  if (!UPLOAD_FILE_ENDPOINT || !API_TOKEN) {
+  if (!UPLOAD_FILE_ENDPOINT || !API_GW_SECRET_TOKEN) {
     console.error("Missing required env vars", {
       UPLOAD_FILE_ENDPOINT: Boolean(UPLOAD_FILE_ENDPOINT),
-      API_TOKEN: Boolean(API_TOKEN),
+      API_GW_SECRET_TOKEN: Boolean(API_GW_SECRET_TOKEN),
     });
     return {
       statusCode: 500,
@@ -41,7 +41,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     const response = await axios.get(UPLOAD_FILE_ENDPOINT, {
       params: { id, file_key: fileKey, resource, mimeType },
-      headers: { Authorization: `Bearer ${API_TOKEN}` },
+      headers: { Authorization: `Bearer ${API_GW_SECRET_TOKEN}` },
     });
 
     return {

@@ -25,6 +25,7 @@ variable "backend_certificate_arn" {
 }
 
 variable "lambdas" {
+  description = "All lambdas data in format : [key]: { lambda_arn: ..., lambda_function_name: ...} to be configured in API GW"
   type = map(object({
     lambda_arn           = string
     lambda_function_name = string

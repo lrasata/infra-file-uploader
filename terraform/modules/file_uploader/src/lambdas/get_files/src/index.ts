@@ -5,8 +5,8 @@ const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const S3 = new AWS.S3();
 const cloudwatch = new AWS.CloudWatch();
 
-const TABLE_NAME = process.env.DYNAMO_TABLE;
-const BUCKET_NAME = process.env.UPLOAD_BUCKET;
+const DYNAMO_TABLE = process.env.DYNAMO_TABLE;
+const UPLOAD_BUCKET = process.env.UPLOAD_BUCKET;
 const EXPIRATION_TIME_S = Number.parseInt(process.env.EXPIRATION_TIME_S ?? "3600", 10);
 
 const API_NAME = process.env.API_NAME || "get-files-api";
@@ -67,8 +67,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    if (!TABLE_NAME || !BUCKET_NAME) {
-      console.error("Missing required env vars", { TABLE_NAME, BUCKET_NAME });
+    if (!DYNAMO_TABLE || !UPLOAD_BUCKET) {
+      console.error("Missing required env vars", { DYNAMO_TABLE, UPLOAD_BUCKET });
       return {
         statusCode: 500,
         headers: corsHeaders,
@@ -77,7 +77,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const params: AWS.DynamoDB.DocumentClient.QueryInput = {
-      TableName: TABLE_NAME,
+      TableName: DYNAMO_TABLE,
       KeyConditionExpression: "#id = :id",
       FilterExpression: "#res = :res",
       ExpressionAttributeNames: {
@@ -106,7 +106,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       const imageUrl =
         fileKey
           ? S3.getSignedUrl("getObject", {
-              Bucket: BUCKET_NAME,
+              Bucket: UPLOAD_BUCKET,
               Key: fileKey,
               Expires: EXPIRATION_TIME_S,
             })

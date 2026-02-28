@@ -9,25 +9,26 @@ resource "aws_api_gateway_rest_api" "api" {
   }
 }
 
+# Declaring a resource for each lambda defined in var.lambdas
 resource "aws_api_gateway_resource" "routes" {
   for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = each.key
+  path_part   = each.key # Notice: key of var.lambdas is used as path here.
 }
 
 
-# GET Method
+# GET Methods
 resource "aws_api_gateway_method" "get_methods" {
   for_each           = var.lambdas
   rest_api_id        = aws_api_gateway_rest_api.api.id
   resource_id        = aws_api_gateway_resource.routes[each.key].id
   http_method        = "GET"
-  authorization      = "NONE" # API Gateway does not require auth token
+  authorization      = "NONE" # API Gateway does not require auth
   request_parameters = {}
 }
 
-# Lambda integration
+# Lambda integrations
 resource "aws_api_gateway_integration" "lambda_integrations" {
   for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -40,10 +41,9 @@ resource "aws_api_gateway_integration" "lambda_integrations" {
   uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
 }
 
-# Lambda permission
+# Lambda permissions
 resource "aws_lambda_permission" "apigw_routes_permissions" {
-  for_each = var.lambdas
-
+  for_each      = var.lambdas
   statement_id  = "AllowAPIGatewayInvoke-${replace(each.key, "/", "_")}"
   action        = "lambda:InvokeFunction"
   function_name = each.value.lambda_function_name
@@ -51,7 +51,7 @@ resource "aws_lambda_permission" "apigw_routes_permissions" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
-# OPTIONS method with CORS headers
+# Settings for OPTIONS request including CORS header - start------------------------------------------------------------
 resource "aws_api_gateway_method" "options_methods" {
   for_each      = var.lambdas
   rest_api_id   = aws_api_gateway_rest_api.api.id
@@ -107,7 +107,9 @@ resource "aws_api_gateway_integration_response" "options_integration_responses" 
     aws_api_gateway_method_response.options_responses
   ]
 }
+# Settings for OPTIONS request - end----------------------------------------------------------------------------------
 
+# Deployment
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
@@ -132,8 +134,7 @@ resource "aws_api_gateway_deployment" "deployment" {
 
 }
 
-
-# Sets CloudWatch Logs role for the entire AWS account
+# Sets CloudWatch Logs role for the entire AWS account-----------------------------------------------------------------
 # API stage cannot apply logging until this account-level setting exists.
 resource "aws_api_gateway_account" "account" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch_role.arn
@@ -147,7 +148,7 @@ resource "aws_cloudwatch_log_group" "api_gateway_access_logs" {
 
 # Define the IAM Role that API Gateway uses to write logs
 resource "aws_iam_role" "cloudwatch_role" {
-  name = "${var.environment}-apigw-cloudwatch-role"
+  name = "${var.environment}-${var.app_id}-apigw-cloudwatch-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -166,6 +167,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
+# Stage settings
 resource "aws_api_gateway_stage" "api_gateway_stage" {
   deployment_id        = aws_api_gateway_deployment.deployment.id
   rest_api_id          = aws_api_gateway_rest_api.api.id
@@ -191,13 +193,14 @@ resource "aws_api_gateway_stage" "api_gateway_stage" {
   }
 }
 
+# Provides a custom domain name to the API GW endpoint
 resource "aws_api_gateway_domain_name" "api" {
   domain_name              = var.api_file_upload_domain_name
   regional_certificate_arn = var.backend_certificate_arn
   endpoint_configuration {
     types = ["REGIONAL"]
   }
-  # 💡 MODERN POLICY ONLY - only supporting at least TLS 1.2 can connect to this API
+  # MODERN POLICY ONLY - only supporting at least TLS 1.2 can connect to this API
   security_policy = "TLS_1_2"
 
   tags = {
@@ -214,6 +217,7 @@ resource "aws_api_gateway_base_path_mapping" "api_mapping" {
   base_path   = "" # empty string means root path
 }
 
+# Monitoring
 module "monitoring_api_gw" {
   source        = "../monitoring/api_gateway"
   api_name      = aws_api_gateway_rest_api.api.name
