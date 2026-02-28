@@ -1,5 +1,6 @@
 variable "region" {
-  type = string
+  description = "The AWS region to deploy resources"
+  type        = string
 }
 
 variable "environment" {
@@ -25,5 +26,6 @@ variable "app_id" {
 }
 
 variable "sns_topic_alert_arn" {
-  type = string
+  description = "SNS topic alert arn is used monitoring S3"
+  type        = string
 }

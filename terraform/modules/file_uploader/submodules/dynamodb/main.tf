@@ -1,6 +1,9 @@
 locals {
   partition_key = "id"
   sort_key      = "file_key"
+  gsi_hash_key  = "resource"
+  gsi_range_key = "uploaded_timestamp"
+  gsi_name      = "ResourceIndex"
 }
 
 resource "aws_dynamodb_table" "files_metadata_table" {
@@ -17,6 +20,23 @@ resource "aws_dynamodb_table" "files_metadata_table" {
   attribute {
     name = local.sort_key
     type = "S"
+  }
+
+  attribute {
+    name = local.gsi_hash_key
+    type = "S"
+  }
+
+  attribute {
+    name = local.gsi_range_key
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = local.gsi_name
+    hash_key        = local.gsi_hash_key
+    range_key       = local.gsi_range_key
+    projection_type = "ALL"
   }
 
   tags = {
@@ -36,9 +56,7 @@ resource "aws_dynamodb_table" "files_metadata_table" {
 
 }
 
-# ============================================================================
 # MONITORING
-# ============================================================================
 module "monitor_dynamodb" {
   source        = "../monitoring/dynamodb"
   sns_topic_arn = var.sns_topic_alert_arn

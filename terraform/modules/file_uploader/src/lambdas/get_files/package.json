@@ -1,18 +1,18 @@
 {
-  "name": "process-uploaded-file",
+  "name": "get_files",
   "version": "1.7.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node -e \"require('fs').rmSync('index.js',{force:true});\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
-    "sharp": "^0.33.5"
+    "aws-sdk": "^2.1692.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.152",

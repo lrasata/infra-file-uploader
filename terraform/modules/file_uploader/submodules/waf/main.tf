@@ -1,10 +1,10 @@
 resource "aws_wafv2_web_acl" "api_gw_waf" {
-  name        = "${var.environment}-file-uploader-api-gw-waf"
+  name        = "${var.environment}-${var.app_id}-file-uploader-api-gw-waf"
   description = "WAF for API Gateway"
   scope       = "REGIONAL"
 
   tags = {
-    Name        = "${var.environment}-file-uploader-api-gw-waf"
+    Name        = "${var.environment}-${var.app_id}-file-uploader-api-gw-waf"
     Environment = var.environment
     App         = var.app_id
   }
@@ -16,13 +16,13 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.environment}-fileUploaderApiGwWAF"
+    metric_name                = "${var.environment}-${var.app_id}-fileUploaderApiGwWAF"
     sampled_requests_enabled   = true
   }
 
   # Managed rule group (common protections)
   rule {
-    name     = "${var.environment}-AWSManagedRulesCommonRuleSet"
+    name     = "${var.environment}-${var.app_id}-AWSManagedRulesCommonRuleSet"
     priority = 1
 
     override_action {
@@ -38,14 +38,14 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-managedRules"
+      metric_name                = "${var.environment}-${var.app_id}-managedRules"
       sampled_requests_enabled   = true
     }
   }
 
   # Rate limiting per IP
   rule {
-    name     = "${var.environment}-RateLimitPerIP"
+    name     = "${var.environment}-${var.app_id}-RateLimitPerIP"
     priority = 200
 
     action {
@@ -61,7 +61,7 @@ resource "aws_wafv2_web_acl" "api_gw_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.environment}-rateLimit"
+      metric_name                = "${var.environment}-${var.app_id}-rateLimit"
       sampled_requests_enabled   = true
     }
   }

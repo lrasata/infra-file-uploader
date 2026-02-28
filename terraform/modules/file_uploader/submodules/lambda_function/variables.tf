@@ -8,7 +8,7 @@ variable "environment" {
 }
 
 variable "lambda_name" {
-  description = "The unique base name for this specific Lambda function (e.g., 'get-presigned-url'). Used in resource names, tags, and the ZIP filename."
+  description = "The unique base name for this specific Lambda function (e.g., 'upload-file'). Used in resource names, tags, and the ZIP filename."
   type        = string
 }
 

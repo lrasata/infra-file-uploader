@@ -1,32 +1,70 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "${var.environment}-get-presigned-url-api"
-  description = "API Gateway for requesting pre-signed url"
+  name        = "${var.environment}-${var.app_id}-api"
+  description = "API Gateway for ${var.app_id} backend endpoints"
 
   tags = {
-    Name        = "${var.environment}-get-presigned-url-api"
+    Name        = "${var.environment}-${var.app_id}-api"
     Environment = var.environment
     App         = var.app_id
   }
 }
 
-resource "aws_api_gateway_resource" "file_upload_url_resource" {
+# Declaring a resource for each lambda defined in var.lambdas
+resource "aws_api_gateway_resource" "routes" {
+  for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "upload-url"
+  path_part   = each.key # Notice: key of var.lambdas is used as path here.
 }
 
-# OPTIONS method with CORS headers
-resource "aws_api_gateway_method" "options_method" {
+
+# GET Methods
+resource "aws_api_gateway_method" "get_methods" {
+  for_each           = var.lambdas
+  rest_api_id        = aws_api_gateway_rest_api.api.id
+  resource_id        = aws_api_gateway_resource.routes[each.key].id
+  http_method        = "GET"
+  authorization      = "NONE" # API Gateway does not require auth
+  request_parameters = {}
+}
+
+# Lambda integrations
+resource "aws_api_gateway_integration" "lambda_integrations" {
+  for_each    = var.lambdas
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.routes[each.key].id
+  http_method = aws_api_gateway_method.get_methods[each.key].http_method
+  # Proxy integration : API Gateway forwards the entire HTTP request (headers, path, query string, body, etc.) directly to your backend Lambda function as-is
+  type = "AWS_PROXY"
+  # even though API method is GET, when using AWS_PROXY the integration must always be "POST"
+  integration_http_method = "POST"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
+}
+
+# Lambda permissions
+resource "aws_lambda_permission" "apigw_routes_permissions" {
+  for_each      = var.lambdas
+  statement_id  = "AllowAPIGatewayInvoke-${replace(each.key, "/", "_")}"
+  action        = "lambda:InvokeFunction"
+  function_name = each.value.lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+}
+
+# Settings for OPTIONS request including CORS header - start------------------------------------------------------------
+resource "aws_api_gateway_method" "options_methods" {
+  for_each      = var.lambdas
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
+  resource_id   = aws_api_gateway_resource.routes[each.key].id
   http_method   = "OPTIONS"
   authorization = "NONE" # NB: this allows public access
 }
 
-resource "aws_api_gateway_integration" "options_integration" {
+resource "aws_api_gateway_integration" "options_integrations" {
+  for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
-  http_method = aws_api_gateway_method.options_method.http_method
+  resource_id = aws_api_gateway_resource.routes[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
   type        = "MOCK"
 
   request_templates = {
@@ -34,10 +72,11 @@ resource "aws_api_gateway_integration" "options_integration" {
   }
 }
 
-resource "aws_api_gateway_method_response" "options_response" {
+resource "aws_api_gateway_method_response" "options_responses" {
+  for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
-  http_method = aws_api_gateway_method.options_method.http_method
+  resource_id = aws_api_gateway_resource.routes[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -51,141 +90,65 @@ resource "aws_api_gateway_method_response" "options_response" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "options_integration_response" {
+resource "aws_api_gateway_integration_response" "options_integration_responses" {
+  for_each    = var.lambdas
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
-  http_method = aws_api_gateway_method.options_method.http_method
-  status_code = aws_api_gateway_method_response.options_response.status_code
+  resource_id = aws_api_gateway_resource.routes[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
+  status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,x-api-gateway-file-upload-auth,X-Requested-With,Accept,Origin'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,PUT'",
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
+
+  depends_on = [
+    aws_api_gateway_method_response.options_responses
+  ]
 }
+# Settings for OPTIONS request - end----------------------------------------------------------------------------------
 
-resource "aws_api_gateway_method" "get_method" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.file_upload_url_resource.id
-  http_method   = "GET"
-  authorization = "NONE"
-
-  request_parameters = {
-    "method.request.header.x-api-gateway-file-upload-auth" = true
-  }
-}
-
-resource "aws_api_gateway_integration" "lambda_integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.file_upload_url_resource.id
-  http_method = aws_api_gateway_method.get_method.http_method
-  # Proxy integration : API Gateway forwards the entire HTTP request (headers, path, query string, body, etc.) directly to your backend Lambda function as-is
-  type = "AWS_PROXY"
-  # even though API method is GET, when using AWS_PROXY the integration must always be "POST"
-  integration_http_method = "POST"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.get_presigned_url_lambda_arn}/invocations"
-}
-
-resource "aws_lambda_permission" "apigw_permission" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = var.get_presigned_url_lambda_function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
-}
-
+# Deployment
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_method.options_method.id,
-      aws_api_gateway_integration.options_integration.id,
-      aws_api_gateway_method_response.options_response.id,
-      aws_api_gateway_integration_response.options_integration_response.id,
-      aws_api_gateway_method.get_method.id,
-      aws_api_gateway_integration.lambda_integration.id
+      for k in keys(var.lambdas) : aws_api_gateway_integration.lambda_integrations[k].id
     ]))
   }
 
   depends_on = [
-    aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.options_integration,
-    aws_api_gateway_integration_response.options_integration_response,
-    aws_api_gateway_method.options_method,
-    aws_api_gateway_method_response.options_response
+    aws_api_gateway_method.get_methods,
+    aws_api_gateway_integration.lambda_integrations,
+    aws_api_gateway_method.options_methods,
+    aws_api_gateway_integration.options_integrations,
+    aws_api_gateway_method_response.options_responses,
+    aws_api_gateway_integration_response.options_integration_responses
   ]
+
 }
 
-# Sets CloudWatch Logs role for the entire AWS account
+# Sets CloudWatch Logs role for the entire AWS account-----------------------------------------------------------------
 # API stage cannot apply logging until this account-level setting exists.
 resource "aws_api_gateway_account" "account" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch_role.arn
 }
 
-resource "aws_cloudwatch_log_group" "apigw_access_logs" {
-  name              = "/aws/apigateway/${var.environment}-${var.app_id}-access-logs"
-  retention_in_days = 30
-}
-
-resource "aws_api_gateway_stage" "api_gateway_stage" {
-  deployment_id        = aws_api_gateway_deployment.deployment.id
-  rest_api_id          = aws_api_gateway_rest_api.api.id
-  stage_name           = var.environment
-  xray_tracing_enabled = true
-
-  depends_on = [aws_api_gateway_account.account]
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.apigw_access_logs.arn
-    format = jsonencode({
-      requestId      = "$context.requestId"
-      ip             = "$context.identity.sourceIp"
-      caller         = "$context.identity.caller"
-      user           = "$context.identity.user"
-      requestTime    = "$context.requestTime"
-      httpMethod     = "$context.httpMethod"
-      resourcePath   = "$context.resourcePath"
-      status         = "$context.status"
-      protocol       = "$context.protocol"
-      responseLength = "$context.responseLength"
-    })
-  }
-}
-
-resource "aws_api_gateway_domain_name" "api" {
-  domain_name              = var.api_file_upload_domain_name
-  regional_certificate_arn = var.backend_certificate_arn
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-
-  # 💡 MODERN POLICY ONLY - only supporting at least TLS 1.2 can connect to this API
-  security_policy = "TLS_1_2"
-
-  tags = {
-    Name        = var.api_file_upload_domain_name
-    Environment = var.environment
-    App         = var.app_id
-  }
-}
-
-resource "aws_api_gateway_base_path_mapping" "api_mapping" {
-  domain_name = aws_api_gateway_domain_name.api.domain_name
-  api_id      = aws_api_gateway_rest_api.api.id
-  stage_name  = aws_api_gateway_stage.api_gateway_stage.stage_name
-  base_path   = "" # empty string means root path
-}
-
 # Define a CloudWatch Log Group
-resource "aws_cloudwatch_log_group" "api_gateway" {
-  name              = "/aws/apigw/${var.environment}-${var.app_id}"
-  retention_in_days = 30
+resource "aws_cloudwatch_log_group" "api_gateway_access_logs" {
+  name              = "/aws/apigw/${var.environment}-${var.app_id}-access-logs"
+  retention_in_days = var.logs_retention_in_days
 }
 
 # Define the IAM Role that API Gateway uses to write logs
 resource "aws_iam_role" "cloudwatch_role" {
-  name = "${var.environment}-apigw-cloudwatch-role"
+  name = "${var.environment}-${var.app_id}-apigw-cloudwatch-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -204,6 +167,57 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
+# Stage settings
+resource "aws_api_gateway_stage" "api_gateway_stage" {
+  deployment_id        = aws_api_gateway_deployment.deployment.id
+  rest_api_id          = aws_api_gateway_rest_api.api.id
+  stage_name           = var.environment
+  xray_tracing_enabled = true
+
+  depends_on = [aws_api_gateway_account.account]
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_access_logs.arn
+    format = jsonencode({
+      requestId      = "$context.requestId"
+      ip             = "$context.identity.sourceIp"
+      caller         = "$context.identity.caller"
+      user           = "$context.identity.user"
+      requestTime    = "$context.requestTime"
+      httpMethod     = "$context.httpMethod"
+      resourcePath   = "$context.resourcePath"
+      status         = "$context.status"
+      protocol       = "$context.protocol"
+      responseLength = "$context.responseLength"
+    })
+  }
+}
+
+# Provides a custom domain name to the API GW endpoint
+resource "aws_api_gateway_domain_name" "api" {
+  domain_name              = var.api_file_upload_domain_name
+  regional_certificate_arn = var.backend_certificate_arn
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+  # MODERN POLICY ONLY - only supporting at least TLS 1.2 can connect to this API
+  security_policy = "TLS_1_2"
+
+  tags = {
+    Name        = var.api_file_upload_domain_name
+    Environment = var.environment
+    App         = var.app_id
+  }
+}
+
+resource "aws_api_gateway_base_path_mapping" "api_mapping" {
+  domain_name = aws_api_gateway_domain_name.api.domain_name
+  api_id      = aws_api_gateway_rest_api.api.id
+  stage_name  = aws_api_gateway_stage.api_gateway_stage.stage_name
+  base_path   = "" # empty string means root path
+}
+
+# Monitoring
 module "monitoring_api_gw" {
   source        = "../monitoring/api_gateway"
   api_name      = aws_api_gateway_rest_api.api.name

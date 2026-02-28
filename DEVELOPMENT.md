@@ -32,10 +32,10 @@ Workflow details:
 - Access to **AWS configured**. This include settings up **OpenID Connect** to connect GitHub Actions to AWS.
 - **Secret values** are configured saved in Secrets Manager:
   - secrets : `${var.environment}/file-upload/secrets`
-    - API_GW_AUTH_SECRET : Secret value of header `x-api-gateway-file-upload-auth` which allows client to request presigned url to upload files.
+    - API_GW_SECRET_TOKEN : Api Token expected by `/upload` and `/files` in `Auhtorization Bearer API_Token` for requesting data and presigned URLs.
 - **Important:**
   - Decide what should be the max size of file upload. Depending on this value, you might adjust the **memory size** allocated for Lambda processing file. It can be configured from 128 MB up to 10,240 MB. Default value in this terraform project is **512 MB**
-- *Only if you run this Terraform configuration locally and not in CI/CD pipeline*:
+- *Only if you run this Terraform configuration **locally** and not in CI/CD pipeline*:
   - Build `sharp` and `aws-sdk` for Lambda function `process-uploaded-file-lambda`
     - Refer to [HOW_TO](HOW_TO.md) section
 - Optional: **BucketAV** stack to be successfully deployed.
@@ -153,17 +153,9 @@ Use the specified API Gateway endpoint to request a presigned URL to upload a fi
 
 ````text
 # Endpoint that returns the presigned URL
-presign_endpoint =  "https://${api_file_upload_domain_name}/upload-url"
+presign_endpoint =  "https://${api_file_upload_domain_name}/upload"
 ````
 
-Specify the secret value of the header `x-api-gateway-file-upload-auth`
-
-````text
-# Custom auth header required by your Lambda
-headers = {
-    "x-api-gateway-file-upload-auth": "secret"
-}
-````
 
 Provide the following query parameters:
 

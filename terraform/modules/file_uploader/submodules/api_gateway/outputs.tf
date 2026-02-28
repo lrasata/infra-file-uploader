@@ -1,7 +1,7 @@
 
 output "api_gateway_invoke_url" {
   description = "Public URL for invoking the API Gateway"
-  value       = "https://${var.api_file_upload_domain_name}/upload-url"
+  value       = "https://${var.api_file_upload_domain_name}/upload"
 }
 
 output "api_gateway_rest_api_id" {

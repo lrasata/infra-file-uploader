@@ -1,4 +1,4 @@
-# File Uploader Infrastructure - Managed with Terraform on AWS
+# File Uploader Infrastructure – Managed with Terraform on AWS
 **🟢 Pipeline Status**
 
 ![Staging Plan](https://github.com/lrasata/infra-file-uploader/actions/workflows/plan-pr-to-staging.yml/badge.svg)
@@ -6,6 +6,9 @@
 ![Ephemeral Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
 
 ![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
+
+> 🚧 **v1.7.0-beta.x**  
+> This version is only provided for demo purposes
 
 ## Overview
 
@@ -27,7 +30,12 @@ This infrastructure is **100% serverless**.
 5. In case of image file, a generated thumbnail is stored in a dedicated S3 folder `thumbnails/`, and metadata (file
    key, thumbnail key, user ID, etc.) is recorded in **DynamoDB**.
 
-<img src="docs/upload-file-infra.png" alt="file-uploader-infrastructure">
+<img src="docs/upload-file-infra-v1.7.0.png" alt="file-uploader-infrastructure">
+
+> 🚧 **Demo Notes:**  
+> A lightweight Lambda **proxy** layer simulates a backend authorizer.
+> - Prevents exposing API secrets to the frontend
+> - In production, replace with **Cognito Authorizer** on API Gateway
 
 ## Usage
 
@@ -50,21 +58,14 @@ module "file_uploader" {
 }
 ```
 
-### Accessing object in S3 private uploads bucket
+**Outputs**
 
-This section only describes a recommendation. But how you decide to access S3 private uploads bucket
-depends on your project requirements.
-
-One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access
-Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it.
-End-users get **signed URLs** or **signed cookies** to access objects within the private S§ bucket.
-
-The following outputs are provided by the module to allow a set up with Cloudfront distribution.
+The module provides the following outputs.
 
 ````text
 output "api_gateway_invoke_url" {
   description = "Public URL for invoking the API Gateway"
-  value       = "https://${var.api_file_upload_domain_name}/upload-url"
+  value       = "https://${var.api_file_upload_domain_name}/upload"
 }
 
 output "uploads_bucket_id" {
@@ -92,31 +93,31 @@ Usage :
 origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ````
 
+### Accessing objects in the private S3 uploads bucket
+
+> 🚧 **v1.7.0-beta.x**  
+> This version is only provided for demo purposes
+
+For this project, we use a **Lambda proxy** to handle secure access to S3 objects.
+
+- To **upload files**, use the `/upload-proxy` endpoint.
+- To **fetch files**, use the `/files-proxy` endpoint.
+
+This proxy currently handles request forwarding and signing presigned URLs for S3, keeping the bucket private.  
+In a production deployment, you could replace this proxy with a proper authentication layer such as **API Gateway + Cognito Authorizer** or a **CloudFront distribution with signed URLs**, depending on your security requirements.
+
+
 ## Key attributes
 
 ### Security
 
+- **Presigned URLs** are used for uploads and downloads, granting temporary, time-limited access to specific objects without exposing AWS credentials.
+- All files are stored in **S3 encrypted with SSE-KMS using Customer Managed Keys (CMK)**  at rest.
+- **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
+- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.).
 - Optional **BucketAV integration** to scan for malware before files are processed.
     - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be
       changed in BucketAV settings)
-- All files are stored in **S3 with default encryption SSE-S3**  at rest.
-- **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
-- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.). It also blocks
-  any unauthorised requests which do not contain required auth header.
-
-#### Secure access to presigned URL API
-
-To prevent unauthorized clients from requesting presigned upload URLs, the API Gateway endpoint is **not exposed directly**.
-
-Requests to the presigned URL endpoint are expected to go through **CloudFront**, which injects a secret header (`API_GW_AUTH_SECRET`) into each request.  
-API Gateway validates this header and rejects any request that does not contain the expected value.
-
-This ensures:
-- The presigned URL API cannot be called directly from the public internet
-- Only trusted CloudFront distributions can access the endpoint
-- The secret never reaches the client
-
-As a future improvement, **Amazon Cognito** can be enabled optionally to add user-level authentication and authorization if stronger identity guarantees are required.
 
 ### Reliability
 
@@ -138,9 +139,9 @@ As a future improvement, **Amazon Cognito** can be enabled optionally to add use
 - **Environment-specific variables** allow dev/staging/prod separation.
 - Lambda functions are decoupled from S3 and SNS triggers, making updates safe and predictable.
 
-## Monitoring
+## Monitoring 
 
-### S3 Uploads bucket
+### S3 Uploads bucket Alerts and Metrics
 
 Critical Alerts (CloudWatch → SNS → Email) triggered when Failed uploads > 5
 
@@ -153,7 +154,7 @@ CloudWatch metrics 4xxErrors and 5xxErrors capture any request that reaches S3 b
 - AccessDenied (bad IAM permissions)
 - InvalidAccessKeyId
 - SignatureDoesNotMatch
-- Upload to wrong bucket or prefix
+- Upload to the wrong bucket or prefix
 - Missing ACL permissions
 - Multipart upload part rejected
 - Incorrect use of presigned URLs
@@ -184,7 +185,7 @@ This validates that uploads → events → Lambda chain is functioning correctly
 | **5XXError (Cloudwatch Alarm)** | Count | API internal server failures           |
 | **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests   |
 
-### DynamoDB Metadata writer
+### DynamoDB Metadata writer Metrics
 
 | Metric                                                | Unit  | Why It Matters                        |
 |-------------------------------------------------------|-------|---------------------------------------|
@@ -194,7 +195,7 @@ This validates that uploads → events → Lambda chain is functioning correctly
 | **WriteThrottleEvents (Cloudwatch Alarm)**            | Count | Capacity problems → risk of data loss |
 | **ConditionalCheckFailedRequests (Cloudwatch Alarm)** | Count | Duplicate keys or constraint issues   |
 
-### Thumbnail Generation Lambda
+### Thumbnail Generation Lambda Metrics
 
 | Metric                        | Unit  | Description                                    |
 |-------------------------------|-------|------------------------------------------------|
@@ -218,7 +219,7 @@ RDS).
 - **Fit for the use case**: The file uploader only requires simple, fast lookups (e.g., get file key or thumbnail URL by
   user). This doesn’t require complex relational queries, making DynamoDB the most efficient choice.
 
-### Why BucketAV (or other proprietary AV) instead of using ClamAV (open-source) in Lambda
+### Why BucketAV (or another proprietary AV) instead of using ClamAV (open-source) in Lambda
 
 **TL;DR** For enterprise-grade, scalable, and low-maintenance infrastructure, a managed AV solution such as BucketAV is
 the pragmatic choice. While it reduces engineering overhead, it comes at [a cost](https://bucketav.com/pricing/) but it
@@ -235,8 +236,8 @@ often proves cheaper in the long run when factoring in DevOps time, maintenance,
     - Virus definitions must be constantly updated, requiring rebuilds and redeployments.
 
 With BucketAV (or equivalent managed AV), patching, signature updates, and scaling are handled by the vendor.
+Managed solutions like BucketAV provide features out of the box:
 
-- **Enterprise features:** Managed solutions like BucketAV provide features out of the box:
-    - Quarantine buckets for infected files
-    - Integration with SNS (used here to trigger downstream Lambda only after a file is marked “clean”)
-    - Logging, monitoring, and compliance reporting
+- Quarantine buckets for infected files
+- Integration with SNS (used here to trigger downstream Lambda only after a file is marked “clean”)
+- Logging, monitoring, and compliance reporting

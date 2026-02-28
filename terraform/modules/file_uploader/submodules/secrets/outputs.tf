@@ -1,7 +1,7 @@
 
-output "auth_secret" {
+output "api_token" {
   description = "The API Gateway authentication secret from Secrets Manager"
-  value       = local.auth_secret
+  value       = local.api_gw_secret_token
   sensitive   = true
 }
 

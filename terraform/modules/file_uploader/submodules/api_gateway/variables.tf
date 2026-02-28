@@ -9,6 +9,11 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "app_id" {
+  description = "Application identifier for tagging resources"
+  type        = string
+}
+
 variable "api_file_upload_domain_name" {
   description = "The domain name for the API Gateway"
   type        = string
@@ -19,23 +24,21 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
-variable "get_presigned_url_lambda_function_name" {
-  description = "Name of the get presigned URL Lambda function"
-  type        = string
-}
-
-variable "get_presigned_url_lambda_arn" {
-  description = "ARN of the get presigned URL Lambda function"
-  type        = string
-}
-
-variable "app_id" {
-  description = "Application identifier for tagging resources"
-  type        = string
-  default     = ""
+variable "lambdas" {
+  description = "All lambdas data in format : [key]: { lambda_arn: ..., lambda_function_name: ...} to be configured in API GW"
+  type = map(object({
+    lambda_arn           = string
+    lambda_function_name = string
+  }))
 }
 
 variable "sns_topic_arn" {
   description = "SNS topic for alarms."
   type        = string
+}
+
+variable "logs_retention_in_days" {
+  description = "Number of days of retention of logs"
+  type        = number
+  default     = 30
 }

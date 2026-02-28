@@ -1,6 +1,6 @@
-# --- IAM ROLE ---
+# IAM ROLE
 resource "aws_iam_role" "lambda_exec_role" {
-  name = "${var.environment}-lambda-${var.lambda_name}-exec-role"
+  name = "${var.environment}-${var.app_id}-lambda-${var.lambda_name}-exec-role"
   tags = {
     Environment = var.environment
     App         = var.app_id
@@ -18,9 +18,9 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-# --- 4. IAM POLICY ---
+# IAM POLICY
 resource "aws_iam_policy" "lambda_custom_policy" {
-  name        = "${var.environment}-lambda-${var.lambda_name}-policy"
+  name        = "${var.environment}-${var.app_id}-lambda-${var.lambda_name}-policy"
   description = "Custom policy for ${var.lambda_name} lambda"
 
   # Use the dynamic list of statements passed from the configuration map
@@ -35,7 +35,7 @@ resource "aws_iam_policy" "lambda_custom_policy" {
   }
 }
 
-# --- 5. LAMBDA FUNCTION ---
+# LAMBDA FUNCTION
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = var.source_dir
@@ -44,8 +44,8 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "lambda_function" {
-  function_name = "${var.environment}-${var.lambda_name}-lambda"
-  runtime       = "nodejs20.x"
+  function_name = "${var.environment}-${var.app_id}-${var.lambda_name}-lambda"
+  runtime       = "nodejs22.x"
   handler       = var.handler_file
 
   filename         = data.archive_file.lambda_zip.output_path
@@ -68,7 +68,7 @@ resource "aws_lambda_function" "lambda_function" {
   depends_on = [aws_iam_role.lambda_exec_role]
 }
 
-# --- 6. IAM ATTACHMENTS ---
+# IAM ATTACHMENTS
 resource "aws_iam_role_policy_attachment" "lambda_custom_policy_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = aws_iam_policy.lambda_custom_policy.arn

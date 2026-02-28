@@ -5,7 +5,7 @@ resource "aws_s3_bucket" "uploads" {
   bucket = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
 
   tags = {
-    Name        = "${var.environment}-uploads-bucket"
+    Name        = "${var.environment}-${var.app_id}-${var.uploads_bucket_name}"
     Environment = var.environment
     App         = var.app_id
     Description = "Bucket for storing uploaded files and geenrated thumbnails"
@@ -25,7 +25,7 @@ resource "aws_s3_bucket_versioning" "uploads_versioning" {
   }
 }
 
-# Enable server-side encryption with KMS
+# Enable server-side encryption with SSE-KMS CMK
 resource "aws_s3_bucket_server_side_encryption_configuration" "uploads_encryption" {
   bucket = aws_s3_bucket.uploads.id
 
@@ -48,7 +48,7 @@ resource "aws_s3_bucket_public_access_block" "uploads_public_access" {
 }
 
 # Enable CORS for presigned URL uploads from browsers
-# Allows the web browser to make a PUT request directly to S3 using presigned url. S3 is the one handling the CORS preflight
+# Allows the web browser to make a PUT/GET request directly to S3 using presigned url. S3 is the one handling the CORS preflight
 resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
   bucket = aws_s3_bucket.uploads.id
 
@@ -57,7 +57,6 @@ resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
     allowed_origins = ["*"]
     allowed_headers = ["*"]
     expose_headers  = ["ETag"]
-    max_age_seconds = 3000
   }
 
   depends_on = [aws_s3_bucket_public_access_block.uploads_public_access]

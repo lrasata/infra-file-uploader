@@ -38,7 +38,7 @@ module "secrets" {
 module "lambda_functions" {
   source = "./submodules/lambda_function"
 
-  # for_each to loop over lambda_configs to set up get_presigned_url and process_uploaded_file lambdas
+  # for_each to loop over lambda_configs to set up upload_file and process_uploaded_file lambdas
   for_each = local.lambda_configs
 
   # Pass common variables
@@ -46,14 +46,36 @@ module "lambda_functions" {
   app_id      = var.app_id
 
   # Pass variables specific to the current iteration (key is the map key, value is the map content)
-  lambda_name           = each.value.base_name
-  source_dir            = each.value.source_dir
-  handler_file          = each.value.handler_file
-  excludes              = each.value.excludes
-  timeout               = each.value.timeout
-  memory_size           = each.value.memory_size
-  environment_vars      = each.value.environment_vars
-  iam_policy_statements = each.value.iam_policy_statements
+  lambda_name           = each.value["base_name"]
+  source_dir            = each.value["source_dir"]
+  handler_file          = each.value["handler_file"]
+  excludes              = each.value["excludes"]
+  timeout               = each.value["timeout"]
+  memory_size           = each.value["memory_size"]
+  environment_vars      = each.value["environment_vars"]
+  iam_policy_statements = each.value["iam_policy_statements"]
+}
+
+module "lambda_proxies_functions" {
+  source = "./submodules/lambda_function"
+
+  for_each = local.lambda_proxies
+
+  # Pass common variables
+  environment = var.environment
+  app_id      = var.app_id
+
+  # Pass variables specific to the current iteration (key is the map key, value is the map content)
+  lambda_name           = each.value["base_name"]
+  source_dir            = each.value["source_dir"]
+  handler_file          = each.value["handler_file"]
+  excludes              = each.value["excludes"]
+  timeout               = each.value["timeout"]
+  memory_size           = each.value["memory_size"]
+  environment_vars      = each.value["environment_vars"]
+  iam_policy_statements = each.value["iam_policy_statements"]
+
+  depends_on = [module.lambda_functions]
 }
 
 # Call the API Gateway submodule
@@ -66,16 +88,35 @@ module "api_gateway" {
   api_file_upload_domain_name = var.api_file_upload_domain_name
   backend_certificate_arn     = var.backend_certificate_arn
 
-  # Lambda integration
-  get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
-  get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
+  # Lambda integration for routes
+  lambdas = {
+    "upload" = {
+      lambda_arn           = module.lambda_functions["upload_file"].function_arn
+      lambda_function_name = module.lambda_functions["upload_file"].function_name
+    }
+    "files" = {
+      lambda_arn           = module.lambda_functions["get_files"].function_arn
+      lambda_function_name = module.lambda_functions["get_files"].function_name
+    }
+
+    # Proxy endpoints
+    "upload-proxy" = {
+      lambda_arn           = module.lambda_proxies_functions["upload_proxy"].function_arn
+      lambda_function_name = module.lambda_proxies_functions["upload_proxy"].function_name
+    }
+    "files-proxy" = {
+      lambda_arn           = module.lambda_proxies_functions["get_files_proxy"].function_arn
+      lambda_function_name = module.lambda_proxies_functions["get_files_proxy"].function_name
+    }
+  }
 
   sns_topic_arn = module.sns.sns_topic_alerts_arn
 
   depends_on = [module.lambda_functions]
+
 }
 
-# Call the WAF submodule
+# Call the WAF submodule to be associated with API GW
 module "waf" {
   source = "./submodules/waf"
 
@@ -107,9 +148,7 @@ module "file_scanning" {
   use_bucketav                               = var.use_bucket_av
 }
 
-# ============================================================================
 # MONITORING Lambda functions
-# ============================================================================
 module "monitor_thumbnail_generation_lambda" {
   source      = "./submodules/monitoring/lambda_thumbnail_generator"
   environment = var.environment

@@ -10,7 +10,8 @@ variable "app_id" {
 }
 
 variable "sns_topic_alert_arn" {
-  type = string
+  description = "SNS topic alert arn is used monitoring the db table"
+  type        = string
 }
 
 variable "region" {
