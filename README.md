@@ -1,4 +1,4 @@
-# File Uploader Infrastructure - Managed with Terraform on AWS
+# File Uploader Infrastructure – Managed with Terraform on AWS
 **🟢 Pipeline Status**
 
 ![Staging Plan](https://github.com/lrasata/infra-file-uploader/actions/workflows/plan-pr-to-staging.yml/badge.svg)
@@ -6,6 +6,9 @@
 ![Ephemeral Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-ephemeral-env.yml/badge.svg)
 
 ![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
+
+> 🚧 **v1.7.0-beta.1**  
+> This version is only provided for demo purposes
 
 ## Overview
 
@@ -27,7 +30,12 @@ This infrastructure is **100% serverless**.
 5. In case of image file, a generated thumbnail is stored in a dedicated S3 folder `thumbnails/`, and metadata (file
    key, thumbnail key, user ID, etc.) is recorded in **DynamoDB**.
 
-<img src="docs/upload-file-infra.png" alt="file-uploader-infrastructure">
+<img src="docs/upload-file-infra-v1.7.0.png" alt="file-uploader-infrastructure">
+
+> 🚧 **Demo Notes:**  
+> A lightweight Lambda **proxy** layer simulates a backend authorizer.
+> - Prevents exposing API secrets to the frontend
+> - In production, replace with **Cognito Authorizer** on API Gateway
 
 ## Usage
 
@@ -50,16 +58,9 @@ module "file_uploader" {
 }
 ```
 
-### Accessing object in S3 private uploads bucket
+**Outputs**
 
-This section only describes a recommendation. But how you decide to access S3 private uploads bucket
-depends on your project requirements.
-
-One way to securely serve files from a private S3 bucket is through **CloudFront distribution with Origin Access
-Control (OAC) + bucket policy**. This way, the bucket stays **private**, and only **CloudFront** can access it.
-End-users get **signed URLs** or **signed cookies** to access objects within the private S§ bucket.
-
-The following outputs are provided by the module to allow a set up with Cloudfront distribution.
+The module provides the following outputs.
 
 ````text
 output "api_gateway_invoke_url" {
@@ -91,6 +92,20 @@ output "dynamo_db_table_name" {
 Usage : 
 origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 ````
+
+### Accessing objects in the private S3 uploads bucket
+
+> 🚧 **v1.7.0-beta.1**  
+> This version is only provided for demo purposes
+
+For this project, we use a **Lambda proxy** to handle secure access to S3 objects.
+
+- To **upload files**, use the `/upload-proxy` endpoint.
+- To **fetch files**, use the `/get-files-proxy` endpoint.
+
+This proxy currently handles request forwarding and signing presigned URLs for S3, keeping the bucket private.  
+In a production deployment, you could replace this proxy with a proper authentication layer such as **API Gateway + Cognito Authorizer** or a **CloudFront distribution with signed URLs**, depending on your security requirements.
+
 
 ## Key attributes
 
