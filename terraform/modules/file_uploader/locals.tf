@@ -199,6 +199,7 @@ locals {
           DYNAMO_TABLE      = module.dynamodb.files_metadata_table_name
           PARTITION_KEY     = module.dynamodb.partition_key
           SORT_KEY          = module.dynamodb.sort_key
+          FILE_PROCESSED_TOPIC_ARN = module.sns_processed_file_event.sns_topic_arn
         }
         # Policy unique to this Lambda
         iam_policy_statements = [
@@ -233,11 +234,20 @@ locals {
                 ]
               }
             }
+          },
+          {
+            Effect = "Allow"
+            Action = [
+              "sns:Publish"
+            ]
+            Resource = [
+              module.sns_processed_file_event.sns_topic_arn
+            ]
           }
         ]
       }
     )
   }
 
-  depends_on = [module.s3_bucket, module.dynamodb]
+  depends_on = [module.s3_bucket, module.dynamodb, module.sns_processed_file_event]
 }

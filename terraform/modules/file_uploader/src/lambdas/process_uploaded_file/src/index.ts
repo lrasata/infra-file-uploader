@@ -5,11 +5,13 @@ import type { SNSEvent, S3Event } from "aws-lambda";
 const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
 const cloudwatch = new AWS.CloudWatch();
+const SNS = new AWS.SNS();
 
 const DYNAMO_TABLE = process.env.DYNAMO_TABLE;
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "";
 const THUMBNAIL_FOLDER = process.env.THUMBNAIL_FOLDER || "";
 const BUCKET_AV_ENABLED = process.env.BUCKET_AV_ENABLED === "true";
+const FILE_PROCESSED_TOPIC_ARN = process.env.FILE_PROCESSED_TOPIC_ARN || "";
 
 const NAMESPACE_METADATA_WRITER = "Custom/MetadataWriter";
 const NAMESPACE_THUMBNAIL = "Custom/ThumbnailGenerator";
@@ -46,6 +48,23 @@ function isSnsEvent(event: any): event is SNSEvent {
 
 function isS3Event(event: any): event is S3Event {
   return Array.isArray(event?.Records) && event.Records[0]?.s3?.bucket?.name != null;
+}
+
+async function publishFileProcessedEvent(payload: any) {
+  if (!FILE_PROCESSED_TOPIC_ARN) {
+    console.log("FILE_PROCESSED_TOPIC_ARN is not configured. Skipping SNS publish.");
+    return;
+  }
+  try {
+    await SNS.publish({
+      TopicArn: FILE_PROCESSED_TOPIC_ARN,
+      Subject: "FileProcessed",
+      Message: JSON.stringify(payload),
+    }).promise();
+
+  } catch (err) {
+    console.error(`❌ Failed to publish SNS event ${FILE_PROCESSED_TOPIC_ARN}:`, err);
+  }
 }
 
 export const handler = async (event: unknown) => {
@@ -175,6 +194,19 @@ export const handler = async (event: unknown) => {
 
       await DynamoDB.transactWrite({ TransactItems: transactItems }).promise();
       await emitMetric("DynamoWrites", 1, "Count", NAMESPACE_METADATA_WRITER);
+
+      await publishFileProcessedEvent({
+        status: "processed",
+        bucket,
+        fileKey,
+        contentType: contentType || null,
+        resource: apiResource,
+        partitionKey,
+        filename: metadata?.originalfilename || generatedFilename,
+        tableName: DYNAMO_TABLE,
+        processedAt: new Date().toISOString(),
+      });
+
     } catch (err) {
       console.error("DynamoDB error:", err);
       await emitMetric("DynamoWriteFailed", 1, "Count", NAMESPACE_METADATA_WRITER);

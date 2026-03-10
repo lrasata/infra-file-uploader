@@ -2,7 +2,7 @@
 
 `sharp` is used in the Lambda function which process files after they are uploaded in S3 bucket. It is use to generate thumbnail of uplaoded files.
 
-See in folder: `terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file/processUploadedFile.js`
+See in folder: `terraform/modules/file_uploader/submodules/lambda_functions/src/lambdas/process_uploaded_file/`
 
 ## On Linux or MacOS
 

@@ -1,11 +1,23 @@
 # Call of the sns submodule
+# SNS for Monitoring alerts
 module "sns" {
   source = "./submodules/sns"
 
   environment        = var.environment
   app_id             = var.app_id
   notification_email = var.notification_email
+  service_name       = "alerts"
 }
+
+# SNS for Processed file event publication
+module "sns_processed_file_event" {
+  source = "./submodules/sns"
+
+  environment  = var.environment
+  app_id       = var.app_id
+  service_name = "processed-file-event-publish"
+}
+
 # Call the S3 buckets submodule
 module "s3_bucket" {
   source = "./submodules/s3_bucket"
@@ -14,7 +26,7 @@ module "s3_bucket" {
   app_id                       = var.app_id
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
-  sns_topic_alert_arn          = module.sns.sns_topic_alerts_arn
+  sns_topic_alert_arn          = module.sns.sns_topic_arn
   region                       = var.region
 }
 
@@ -24,7 +36,7 @@ module "dynamodb" {
 
   environment         = var.environment
   app_id              = var.app_id
-  sns_topic_alert_arn = module.sns.sns_topic_alerts_arn
+  sns_topic_alert_arn = module.sns.sns_topic_arn
   region              = var.region
 }
 
@@ -110,7 +122,7 @@ module "api_gateway" {
     }
   }
 
-  sns_topic_arn = module.sns.sns_topic_alerts_arn
+  sns_topic_arn = module.sns.sns_topic_arn
 
   depends_on = [module.lambda_functions]
 
