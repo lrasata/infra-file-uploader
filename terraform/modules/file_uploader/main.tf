@@ -146,6 +146,7 @@ module "file_scanning" {
   upload_folder                              = local.upload_folder
   uploads_bucket_arn                         = module.s3_bucket.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
+  additional_trigger_lambda_arns             = var.additional_trigger_lambda_arns
 }
 
 # MONITORING Lambda functions

@@ -145,3 +145,9 @@ variable "notification_email" {
   description = "Email address for notifications"
   type        = string
 }
+
+variable "additional_trigger_lambda_arns" {
+  type        = list(string)
+  description = "ARNs of additional Lambdas to trigger on S3 upload"
+  default     = []
+}

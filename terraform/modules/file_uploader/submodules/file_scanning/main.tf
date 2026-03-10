@@ -48,5 +48,13 @@ resource "aws_s3_bucket_notification" "source_notification" {
     filter_prefix       = var.upload_folder
   }
 
+  dynamic "lambda_function" {
+    for_each = var.additional_trigger_lambda_arns
+    content {
+      lambda_function_arn = lambda_function.value
+      events              = ["s3:ObjectCreated:*"]
+    }
+  }
+
   depends_on = [aws_lambda_permission.allow_s3_to_invoke_process_uploaded_file]
 }
