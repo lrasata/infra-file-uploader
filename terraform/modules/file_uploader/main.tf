@@ -26,7 +26,7 @@ module "s3_bucket" {
   app_id                       = var.app_id
   uploads_bucket_name          = var.uploads_bucket_name
   enable_transfer_acceleration = var.enable_transfer_acceleration
-  sns_topic_alert_arn          = module.sns.sns_topic_alerts_arn
+  sns_topic_alert_arn          = module.sns.sns_topic_arn
   region                       = var.region
 }
 
@@ -36,7 +36,7 @@ module "dynamodb" {
 
   environment         = var.environment
   app_id              = var.app_id
-  sns_topic_alert_arn = module.sns.sns_topic_alerts_arn
+  sns_topic_alert_arn = module.sns.sns_topic_arn
   region              = var.region
 }
 
@@ -82,7 +82,7 @@ module "api_gateway" {
   get_presigned_url_lambda_function_name = module.lambda_functions["get_presigned_url"].function_name
   get_presigned_url_lambda_arn           = module.lambda_functions["get_presigned_url"].function_arn
 
-  sns_topic_arn = module.sns.sns_topic_alerts_arn
+  sns_topic_arn = module.sns.sns_topic_arn
 
   depends_on = [module.lambda_functions]
 }
