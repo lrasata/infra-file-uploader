@@ -91,7 +91,7 @@ locals {
         {
           Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
           Effect   = "Allow"
-          Resource = [module.s3_bucket.uploads_bucket_kms_key_arn]
+          Resource = [module.s3_bucket.uploads_bucket_kms_key_arn, module.sns_processed_file_event.sns_kms_cmk_arn]
         },
         {
           Effect   = "Allow",
