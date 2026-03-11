@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const DynamoDB = new AWS.DynamoDB.DocumentClient();
+const SNS = new AWS.SNS();
 const sharp = require("sharp");
 
 const PARTITION_KEY = process.env.PARTITION_KEY || "id";
@@ -9,6 +10,7 @@ const TABLE_NAME = process.env.DYNAMO_TABLE;
 const UPLOAD_FOLDER = process.env.UPLOAD_FOLDER || "";
 const THUMBNAIL_FOLDER = process.env.THUMBNAIL_FOLDER;
 const IS_BUCKETAV_ENABLED = process.env.BUCKET_AV_ENABLED || false;
+const FILE_PROCESSED_TOPIC_ARN = process.env.FILE_PROCESSED_TOPIC_ARN || "";
 
 const NAMESPACE_METADATA_WRITER = "Custom/MetadataWriter";
 const NAMESPACE_THUMBNAIL = "Custom/ThumbnailGenerator";
@@ -37,6 +39,19 @@ async function emitMetric(metricName, value, unit = "Count", namespace) {
     } catch (err) {
         console.error(`❌ Failed to publish metric ${metricName}:`, err);
     }
+}
+
+async function publishFileProcessedEvent(payload) {
+    if (!FILE_PROCESSED_TOPIC_ARN) {
+        console.log("FILE_PROCESSED_TOPIC_ARN is not configured. Skipping SNS publish.");
+        return;
+    }
+
+    await SNS.publish({
+        TopicArn: FILE_PROCESSED_TOPIC_ARN,
+        Subject: "FileProcessed",
+        Message: JSON.stringify(payload),
+    }).promise();
 }
 
 exports.handler = async (event) => {
@@ -125,7 +140,6 @@ exports.handler = async (event) => {
             console.log("Not an image — skipping thumbnail generation.");
         }
 
-
         // ------------ DynamoDB metadata write ------------
         const dynamoStart = Date.now();
 
@@ -143,7 +157,6 @@ exports.handler = async (event) => {
                     ":trueVal": true,
                 },
             }).promise();
-
 
             const transactItems = [];
 
@@ -196,6 +209,19 @@ exports.handler = async (event) => {
 
         // Dynamo latency metric (success path)
         await emitMetric("DynamoLatency", Date.now() - dynamoStart, "Milliseconds", NAMESPACE_METADATA_WRITER);
+
+        await publishFileProcessedEvent({
+            status: "processed",
+            bucket,
+            fileKey,
+            contentType: ContentType || null,
+            resource: apiResource,
+            partitionKey,
+            filename,
+            thumbnailKey: thumbKey,
+            tableName: TABLE_NAME,
+            processedAt: new Date().toISOString(),
+        });
 
         return {
             statusCode: 200,

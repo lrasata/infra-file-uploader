@@ -1,11 +1,23 @@
 # Call of the sns submodule
+# SNS for Monitoring alerts
 module "sns" {
   source = "./submodules/sns"
 
   environment        = var.environment
   app_id             = var.app_id
   notification_email = var.notification_email
+  service_name       = "alerts"
 }
+
+# SNS for Processed file event publication
+module "sns_processed_file_event" {
+  source = "./submodules/sns"
+
+  environment  = var.environment
+  app_id       = var.app_id
+  service_name = "processed-file-event-publish"
+}
+
 # Call the S3 buckets submodule
 module "s3_bucket" {
   source = "./submodules/s3_bucket"
@@ -105,7 +117,6 @@ module "file_scanning" {
   upload_folder                              = local.upload_folder
   uploads_bucket_arn                         = module.s3_bucket.uploads_bucket_arn
   use_bucketav                               = var.use_bucket_av
-  additional_trigger_lambda_arns             = var.additional_trigger_lambda_arns
 }
 
 # ============================================================================

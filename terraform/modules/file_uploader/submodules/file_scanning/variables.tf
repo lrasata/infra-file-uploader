@@ -33,9 +33,3 @@ variable "upload_folder" {
   description = "S3 prefix for uploaded files"
   type        = string
 }
-
-variable "additional_trigger_lambda_arns" {
-  type        = list(string)
-  description = "ARNs of additional Lambdas to trigger on S3 upload"
-  default     = []
-}
