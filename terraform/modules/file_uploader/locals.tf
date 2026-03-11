@@ -105,6 +105,15 @@ locals {
               ]
             }
           }
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "sns:Publish"
+          ]
+          Resource = [
+            module.sns_processed_file_event.sns_topic_arn
+          ]
         }
       ]
     }
