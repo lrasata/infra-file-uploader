@@ -46,12 +46,16 @@ async function publishFileProcessedEvent(payload) {
         console.log("FILE_PROCESSED_TOPIC_ARN is not configured. Skipping SNS publish.");
         return;
     }
+    try {
+        await SNS.publish({
+            TopicArn: FILE_PROCESSED_TOPIC_ARN,
+            Subject: "FileProcessed",
+            Message: JSON.stringify(payload),
+        }).promise();
 
-    await SNS.publish({
-        TopicArn: FILE_PROCESSED_TOPIC_ARN,
-        Subject: "FileProcessed",
-        Message: JSON.stringify(payload),
-    }).promise();
+    } catch (err) {
+       console.error(`❌ Failed to publish SNS event ${FILE_PROCESSED_TOPIC_ARN}:`, err);
+    }
 }
 
 exports.handler = async (event) => {
