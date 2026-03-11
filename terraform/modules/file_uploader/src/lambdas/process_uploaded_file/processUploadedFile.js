@@ -218,7 +218,6 @@ exports.handler = async (event) => {
             resource: apiResource,
             partitionKey,
             filename,
-            thumbnailKey: thumbKey,
             tableName: TABLE_NAME,
             processedAt: new Date().toISOString(),
         });
