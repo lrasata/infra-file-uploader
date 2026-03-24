@@ -193,12 +193,12 @@ locals {
         memory_size  = var.lambda_memory_size_mb
         # Variables unique to this Lambda
         environment_vars = {
-          BUCKET_AV_ENABLED = var.use_bucket_av
-          UPLOAD_FOLDER     = local.upload_folder
-          THUMBNAIL_FOLDER  = local.thumbnail_folder
-          DYNAMO_TABLE      = module.dynamodb.files_metadata_table_name
-          PARTITION_KEY     = module.dynamodb.partition_key
-          SORT_KEY          = module.dynamodb.sort_key
+          BUCKET_AV_ENABLED        = var.use_bucket_av
+          UPLOAD_FOLDER            = local.upload_folder
+          THUMBNAIL_FOLDER         = local.thumbnail_folder
+          DYNAMO_TABLE             = module.dynamodb.files_metadata_table_name
+          PARTITION_KEY            = module.dynamodb.partition_key
+          SORT_KEY                 = module.dynamodb.sort_key
           FILE_PROCESSED_TOPIC_ARN = module.sns_processed_file_event.sns_topic_arn
         }
         # Policy unique to this Lambda
