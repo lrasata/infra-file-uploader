@@ -9,56 +9,6 @@ locals {
     memory_size = 128
   }
 
-  lambda_proxies = {
-    # Lambda proxy for upload
-    upload_proxy = merge(
-      local.lambda_defaults,
-      {
-        base_name    = "upload-proxy"
-        source_dir   = "${path.module}/src/lambdas/upload_proxy"
-        handler_file = "dist/index.handler"
-        excludes     = []
-        timeout      = 5
-        memory_size  = 128
-        environment_vars = {
-          UPSTREAM_UPLOAD_FILE_ENDPOINT = "https://${var.api_file_upload_domain_name}/upload"
-          API_GW_SECRET_TOKEN           = module.secrets.api_token
-        }
-        iam_policy_statements = [
-          {
-            Effect   = "Allow"
-            Action   = ["lambda:InvokeFunction"]
-            Resource = [module.lambda_functions["upload_file"].function_arn]
-          }
-        ]
-      }
-    )
-
-    # Lambda proxy for upload
-    get_files_proxy = merge(
-      local.lambda_defaults,
-      {
-        base_name    = "get-files-proxy"
-        source_dir   = "${path.module}/src/lambdas/get_files_proxy"
-        handler_file = "dist/index.handler"
-        excludes     = []
-        timeout      = 5
-        memory_size  = 128
-        environment_vars = {
-          UPSTREAM_GET_FILES_ENDPOINT = "https://${var.api_file_upload_domain_name}/files"
-          API_GW_SECRET_TOKEN         = module.secrets.api_token
-        }
-        iam_policy_statements = [
-          {
-            Effect   = "Allow"
-            Action   = ["lambda:InvokeFunction"]
-            Resource = [module.lambda_functions["get_files"].function_arn]
-          }
-        ]
-      }
-    )
-  }
-
   # Central configuration map for all Lambdas which are not proxies
   lambda_configs = {
     # Configuration for UPLOAD_FILE

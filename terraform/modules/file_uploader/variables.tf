@@ -62,6 +62,19 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
+variable "cloudfront_domain_name" {
+  description = "The  domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  type = string
+}
+
+variable "cognito_user_pool_id" {
+  type = string
+}
+
 # ==============================================================================
 # S3 uploads bucket settings
 # ==============================================================================

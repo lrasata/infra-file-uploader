@@ -68,28 +68,6 @@ module "lambda_functions" {
   iam_policy_statements = each.value["iam_policy_statements"]
 }
 
-module "lambda_proxies_functions" {
-  source = "./submodules/lambda_function"
-
-  for_each = local.lambda_proxies
-
-  # Pass common variables
-  environment = var.environment
-  app_id      = var.app_id
-
-  # Pass variables specific to the current iteration (key is the map key, value is the map content)
-  lambda_name           = each.value["base_name"]
-  source_dir            = each.value["source_dir"]
-  handler_file          = each.value["handler_file"]
-  excludes              = each.value["excludes"]
-  timeout               = each.value["timeout"]
-  memory_size           = each.value["memory_size"]
-  environment_vars      = each.value["environment_vars"]
-  iam_policy_statements = each.value["iam_policy_statements"]
-
-  depends_on = [module.lambda_functions]
-}
-
 # Call the API Gateway submodule
 module "api_gateway" {
   source = "./submodules/api_gateway"
@@ -110,22 +88,15 @@ module "api_gateway" {
       lambda_arn           = module.lambda_functions["get_files"].function_arn
       lambda_function_name = module.lambda_functions["get_files"].function_name
     }
-
-    # Proxy endpoints
-    "upload-proxy" = {
-      lambda_arn           = module.lambda_proxies_functions["upload_proxy"].function_arn
-      lambda_function_name = module.lambda_proxies_functions["upload_proxy"].function_name
-    }
-    "files-proxy" = {
-      lambda_arn           = module.lambda_proxies_functions["get_files_proxy"].function_arn
-      lambda_function_name = module.lambda_proxies_functions["get_files_proxy"].function_name
-    }
   }
 
   sns_topic_arn = module.sns.sns_topic_arn
 
   depends_on = [module.lambda_functions]
 
+  cloudfront_domain_name      = var.cloudfront_domain_name
+  cognito_user_pool_client_id = var.cognito_user_pool_client_id
+  cognito_user_pool_id        = var.cognito_user_pool_id
 }
 
 # Call the WAF submodule to be associated with API GW
@@ -142,8 +113,8 @@ module "route53" {
   source = "./submodules/route53"
 
   api_file_upload_domain_name      = var.api_file_upload_domain_name
-  api_gateway_regional_domain_name = module.api_gateway.api_gateway_domain_name_regional_domain_name
-  api_gateway_regional_zone_id     = module.api_gateway.api_gateway_domain_name_regional_zone_id
+  api_gateway_regional_domain_name = module.api_gateway.api_gateway_target_domain_name
+  api_gateway_regional_zone_id     = module.api_gateway.api_gateway_hosted_zone_id
   route53_zone_name                = var.route53_zone_name
 }
 

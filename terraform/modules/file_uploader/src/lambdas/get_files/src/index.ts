@@ -104,7 +104,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const images = data.Items.map((item) => {
       const fileKey = (item as any).file_key as string | undefined;
 
-      const imageUrl =
+      const url =
         fileKey
           ? S3.getSignedUrl("getObject", {
               Bucket: UPLOAD_BUCKET,
@@ -116,8 +116,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return {
         filename: (item as any).filename,
         uploaded_timestamp: (item as any).uploaded_timestamp,
-        file_size: (item as any).file_size,
-        image_url: imageUrl,
+        size: (item as any).file_size,
+        url: url,
         ...(typeof (item as any).metadata === "object" && (item as any).metadata ? (item as any).metadata : {}),
       };
     });
