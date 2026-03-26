@@ -88,7 +88,7 @@ resource "aws_apigatewayv2_integration" "lambda_integrations" {
   api_id             = aws_apigatewayv2_api.api.id
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
-  uri                = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
+  integration_uri    = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${each.value.lambda_arn}/invocations"
 }
 
 # GET routes — protected by Cognito
