@@ -18,7 +18,6 @@ Required GitHub Secrets for these workflows:
 
 - `AWS_REGION` — AWS region to use e.g. `eu-central-1`.
 - `BACKEND_CERTIFICATE_ARN` — backend certificate arn for the domain name
-- `SECRET_STORE_NAME` — Per env, define this secret store nameof Secret Manager
 
 Workflow details:
 
@@ -133,8 +132,6 @@ lambda_upload_presigned_url_expiration_time_s = 300 # 5min
 
 use_bucketav                     = true
 bucketav_sns_findings_topic_name = "bucketav-FindingsTopic-id"
-
-secret_store_name = "staging/file-upload/secrets"
 
 route53_zone_name = "epic-trip-planner.com"
 ````

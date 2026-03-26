@@ -30,7 +30,6 @@ jobs:
       TF_VAR_backend_certificate_arn: ${{ secrets.BACKEND_CERTIFICATE_ARN }}
       TF_VAR_uploads_bucket_name: file-upload-bucket
       TF_VAR_enable_transfer_acceleration: true
-      TF_VAR_secret_store_name: ${{ secrets.SECRET_STORE_NAME }}
       TF_VAR_route53_zone_name: epic-trip-planner.com
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
 

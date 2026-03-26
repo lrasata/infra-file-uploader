@@ -40,20 +40,7 @@ async function emitMetric(metricName: string, value = 1): Promise<void> {
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    // Validate Bearer token
-    const headers = event.headers ?? {};
-    const authHeader = headers.Authorization ?? headers.authorization;
-
-    const expectedToken = process.env.API_GW_SECRET_TOKEN;
-
-    if (!authHeader || !expectedToken || authHeader !== `Bearer ${expectedToken}`) {
-      await emitMetric("PresignURLUnauthorized");
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: "Unauthorized" }),
-      };
-    }
+    await emitMetric("GetFilesRequests");
 
     const query = event.queryStringParameters ?? {};
     const id = query.id;
@@ -122,6 +109,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     });
 
+    await emitMetric("GetFilesSuccess");
     return {
       statusCode: 200,
       headers: corsHeaders,
@@ -129,6 +117,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
   } catch (err) {
     console.error("Error fetching data:", err);
+    await emitMetric("GetFilesFailed");
     return {
       statusCode: 500,
       headers: corsHeaders,

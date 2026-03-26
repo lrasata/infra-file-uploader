@@ -47,20 +47,6 @@ async function emitMetric(metricName: string, value = 1): Promise<void> {
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   await emitMetric("PresignURLRequests");
 
-  const headers = event.headers ?? {};
-  const authHeader = headers.Authorization ?? headers.authorization;
-
-  const expectedToken = process.env.API_GW_SECRET_TOKEN;
-
-  if (!authHeader || !expectedToken || authHeader !== `Bearer ${expectedToken}`) {
-    await emitMetric("PresignURLUnauthorized");
-    return {
-      statusCode: 401,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: "Unauthorized" }),
-    };
-  }
-
   const query = event.queryStringParameters ?? {};
   const partitionKey = query[PARTITION_KEY];
   const originalFilename = query[SORT_KEY];

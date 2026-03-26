@@ -31,7 +31,6 @@ locals {
           USE_S3_ACCEL        = var.enable_transfer_acceleration
           PARTITION_KEY       = module.dynamodb.partition_key
           SORT_KEY            = module.dynamodb.sort_key
-          API_GW_SECRET_TOKEN = module.secrets.api_token
         }
         # Policy unique to this Lambda
         iam_policy_statements = [
@@ -40,12 +39,6 @@ locals {
             Effect   = "Allow"
             Resource = ["${module.s3_bucket.uploads_bucket_arn}/*"]
           },
-          {
-            Action   = ["secretsmanager:GetSecretValue"]
-            Effect   = "Allow"
-            Resource = [module.secrets.secret_arn]
-          }
-          ,
           {
             Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
             Effect   = "Allow"

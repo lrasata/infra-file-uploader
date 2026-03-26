@@ -40,13 +40,6 @@ module "dynamodb" {
   region              = var.region
 }
 
-# Call the Secrets Manager submodule
-module "secrets" {
-  source = "./submodules/secrets"
-
-  secret_store_name = var.secret_store_name
-}
-
 module "lambda_functions" {
   source = "./submodules/lambda_function"
 
