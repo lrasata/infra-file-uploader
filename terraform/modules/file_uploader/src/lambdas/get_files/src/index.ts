@@ -88,7 +88,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    const images = data.Items.map((item) => {
+    const files = data.Items.map((item) => {
       const fileKey = (item as any).file_key as string | undefined;
 
       const url =
@@ -113,7 +113,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify({ images }),
+      body: JSON.stringify({ files }),
     };
   } catch (err) {
     console.error("Error fetching data:", err);
