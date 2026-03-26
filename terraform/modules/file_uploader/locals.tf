@@ -76,7 +76,6 @@ locals {
           DYNAMO_TABLE        = module.dynamodb.files_metadata_table_name
           UPLOAD_BUCKET       = module.s3_bucket.uploads_bucket_id
           EXPIRATION_TIME_S   = var.lambda_get_files_presigned_url_expiration_time_s
-          API_GW_SECRET_TOKEN = module.secrets.api_token
         }
         # Policy unique to this Lambda
         iam_policy_statements = [
@@ -96,12 +95,6 @@ locals {
               module.dynamodb.files_metadata_table_gsi_arn
             ]
           },
-          {
-            Action   = ["secretsmanager:GetSecretValue"]
-            Effect   = "Allow"
-            Resource = [module.secrets.secret_arn]
-          }
-          ,
           {
             Action   = ["kms:GenerateDataKey", "kms:Decrypt"]
             Effect   = "Allow"
