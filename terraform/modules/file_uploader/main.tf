@@ -92,15 +92,6 @@ module "api_gateway" {
   cognito_user_pool_id        = var.cognito_user_pool_id
 }
 
-# Call the WAF submodule to be associated with API GW
-module "waf" {
-  source = "./submodules/waf"
-
-  environment           = var.environment
-  api_gateway_stage_arn = module.api_gateway.api_gateway_stage_arn
-  app_id                = var.app_id
-}
-
 # Call the Route53 submodule (if DNS is managed)
 module "route53" {
   source = "./submodules/route53"

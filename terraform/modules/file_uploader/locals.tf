@@ -23,14 +23,14 @@ locals {
         memory_size  = 128
         # Variables unique to this Lambda
         environment_vars = {
-          REGION              = var.region
-          EXPIRATION_TIME_S   = var.lambda_upload_presigned_url_expiration_time_s
-          UPLOAD_BUCKET       = module.s3_bucket.uploads_bucket_id
-          API_NAME            = "upload-file-api"
-          UPLOAD_FOLDER       = local.upload_folder
-          USE_S3_ACCEL        = var.enable_transfer_acceleration
-          PARTITION_KEY       = module.dynamodb.partition_key
-          SORT_KEY            = module.dynamodb.sort_key
+          REGION            = var.region
+          EXPIRATION_TIME_S = var.lambda_upload_presigned_url_expiration_time_s
+          UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
+          API_NAME          = "upload-file-api"
+          UPLOAD_FOLDER     = local.upload_folder
+          USE_S3_ACCEL      = var.enable_transfer_acceleration
+          PARTITION_KEY     = module.dynamodb.partition_key
+          SORT_KEY          = module.dynamodb.sort_key
         }
         # Policy unique to this Lambda
         iam_policy_statements = [
@@ -73,9 +73,9 @@ locals {
         memory_size  = 128
         # Variables unique to this Lambda
         environment_vars = {
-          DYNAMO_TABLE        = module.dynamodb.files_metadata_table_name
-          UPLOAD_BUCKET       = module.s3_bucket.uploads_bucket_id
-          EXPIRATION_TIME_S   = var.lambda_get_files_presigned_url_expiration_time_s
+          DYNAMO_TABLE      = module.dynamodb.files_metadata_table_name
+          UPLOAD_BUCKET     = module.s3_bucket.uploads_bucket_id
+          EXPIRATION_TIME_S = var.lambda_get_files_presigned_url_expiration_time_s
         }
         # Policy unique to this Lambda
         iam_policy_statements = [

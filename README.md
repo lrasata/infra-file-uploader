@@ -113,7 +113,6 @@ In a production deployment, you could replace this proxy with a proper authentic
 - **Presigned URLs** are used for uploads and downloads, granting temporary, time-limited access to specific objects without exposing AWS credentials.
 - All files are stored in **S3 encrypted with SSE-KMS using Customer Managed Keys (CMK)**  at rest.
 - **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
-- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.).
 - Optional **BucketAV integration** to scan for malware before files are processed.
     - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be
       changed in BucketAV settings)
