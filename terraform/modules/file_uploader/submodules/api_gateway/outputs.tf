@@ -9,8 +9,7 @@ output "api_gateway_rest_api_id" {
 }
 
 output "api_gateway_stage_arn" {
-  description = "ARN of the API Gateway stage"
-  value       = aws_apigatewayv2_stage.api.arn
+  value = "arn:aws:apigateway:${var.region}:${data.aws_caller_identity.current.account_id}:/apis/${aws_apigatewayv2_api.api.id}/stages/${aws_apigatewayv2_stage.api.name}"
 }
 
 output "api_gateway_target_domain_name" {

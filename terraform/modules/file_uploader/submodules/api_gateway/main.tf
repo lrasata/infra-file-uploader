@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_apigatewayv2_api" "api" {
   name          = "${var.environment}-${var.app_id}-api"
   protocol_type = "HTTP"
