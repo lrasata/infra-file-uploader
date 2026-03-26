@@ -28,6 +28,9 @@ jobs:
       TF_VAR_enable_transfer_acceleration: true
       TF_VAR_route53_zone_name: epic-trip-planner.com
       TF_VAR_notification_email: ${{secrets.ALERT_EMAIL}}
+      TF_VAR_cloudfront_domain_name: ${{ secrets.CLOUDFRONT_DOMAIN_NAME }}
+      TF_VAR_cognito_user_pool_id: ${{ secrets.COGNITO_USER_POOL_ID }}
+      TF_VAR_cognito_user_pool_client_id: ${{ secrets.COGNITO_USER_POOL_CLIENT_ID }}
 
     steps:
       - name: Checkout repository
@@ -50,14 +53,6 @@ jobs:
           npm run build --silent
           
           cd ../get_files
-          npm ci --no-audit --silent
-          npm run build --silent
-          
-          cd ../get_files_proxy
-          npm ci --no-audit --silent
-          npm run build --silent
-          
-          cd ../upload_proxy
           npm ci --no-audit --silent
           npm run build --silent
 

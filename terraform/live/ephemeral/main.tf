@@ -14,4 +14,7 @@ module "file_uploader" {
   lambda_memory_size_mb                         = var.lambda_memory_size_mb
   route53_zone_name                             = var.route53_zone_name
   notification_email                            = var.notification_email
+  cloudfront_domain_name                        = var.cloudfront_domain_name
+  cognito_user_pool_id                          = var.cognito_user_pool_id
+  cognito_user_pool_client_id                   = var.cognito_user_pool_client_id
 }

@@ -72,3 +72,18 @@ variable "notification_email" {
   description = "Email address for notifications"
   type        = string
 }
+
+variable "cloudfront_domain_name" {
+  description = "The domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "cognito_user_pool_id" {
+  description = "The Cognito User Pool ID"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  description = "The Cognito User Pool Client ID"
+  type        = string
+}

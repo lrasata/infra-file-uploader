@@ -97,7 +97,7 @@ resource "aws_apigatewayv2_integration" "lambda_integrations" {
 resource "aws_apigatewayv2_route" "get_routes" {
   for_each           = var.lambdas
   api_id             = aws_apigatewayv2_api.api.id
-  route_key          = "GET /${each.key}"
+  route_key          = "GET /api/${each.key}"
   target             = "integrations/${aws_apigatewayv2_integration.lambda_integrations[each.key].id}"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
   authorization_type = "JWT"
