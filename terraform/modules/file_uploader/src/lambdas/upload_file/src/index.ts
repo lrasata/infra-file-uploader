@@ -52,6 +52,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   const originalFilename = query[SORT_KEY];
   const apiResource = query.resource;
   const mimeType = query.mimeType;
+  const ext = query.ext;
 
   const missingParams: string[] = [];
   if (!partitionKey) missingParams.push(PARTITION_KEY);
@@ -68,7 +69,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   try {
     const randomId = crypto.randomBytes(16).toString("base64url");
-    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}`;
+    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}${ext ? `.${ext}` : ""}`;
 
     const presignedUrl = s3.getSignedUrl("putObject", {
       Bucket: UPLOAD_BUCKET,
