@@ -62,6 +62,19 @@ variable "backend_certificate_arn" {
   type        = string
 }
 
+variable "cloudfront_domain_name" {
+  description = "The  domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  type = string
+}
+
+variable "cognito_user_pool_id" {
+  type = string
+}
+
 # ==============================================================================
 # S3 uploads bucket settings
 # ==============================================================================
@@ -79,17 +92,6 @@ variable "enable_transfer_acceleration" {
   type        = bool
   description = "Enable S3 Transfer Acceleration?"
   default     = false
-}
-
-# ==============================================================================
-# Secrets / auth
-# ==============================================================================
-
-# Name of the Secrets Manager secret (or "secret store") containing the API token used
-# for API Gateway/Lambda authorization.
-variable "secret_store_name" {
-  description = "Name of the secret store where API_GW_AUTH_SECRET value can be fetched"
-  type        = string
 }
 
 # ==============================================================================

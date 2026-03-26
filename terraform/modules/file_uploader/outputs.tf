@@ -27,3 +27,7 @@ output "dynamo_db_table_arn" {
   description = "The ARN of the DynamoDB table"
   value       = module.dynamodb.files_metadata_table_arn
 }
+
+output "sns_topic_arn_processed_file_event" {
+  value = module.sns_processed_file_event.sns_topic_arn
+}

@@ -47,25 +47,12 @@ async function emitMetric(metricName: string, value = 1): Promise<void> {
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   await emitMetric("PresignURLRequests");
 
-  const headers = event.headers ?? {};
-  const authHeader = headers.Authorization ?? headers.authorization;
-
-  const expectedToken = process.env.API_GW_SECRET_TOKEN;
-
-  if (!authHeader || !expectedToken || authHeader !== `Bearer ${expectedToken}`) {
-    await emitMetric("PresignURLUnauthorized");
-    return {
-      statusCode: 401,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: "Unauthorized" }),
-    };
-  }
-
   const query = event.queryStringParameters ?? {};
   const partitionKey = query[PARTITION_KEY];
   const originalFilename = query[SORT_KEY];
   const apiResource = query.resource;
   const mimeType = query.mimeType;
+  const ext = query.ext;
 
   const missingParams: string[] = [];
   if (!partitionKey) missingParams.push(PARTITION_KEY);
@@ -82,7 +69,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   try {
     const randomId = crypto.randomBytes(16).toString("base64url");
-    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}`;
+    const fileKey = `${UPLOAD_FOLDER}${apiResource}/${partitionKey}/${randomId}_${originalFilename}${ext ? `.${ext}` : ""}`;
 
     const presignedUrl = s3.getSignedUrl("putObject", {
       Bucket: UPLOAD_BUCKET,

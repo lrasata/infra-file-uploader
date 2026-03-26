@@ -40,20 +40,7 @@ async function emitMetric(metricName: string, value = 1): Promise<void> {
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    // Validate Bearer token
-    const headers = event.headers ?? {};
-    const authHeader = headers.Authorization ?? headers.authorization;
-
-    const expectedToken = process.env.API_GW_SECRET_TOKEN;
-
-    if (!authHeader || !expectedToken || authHeader !== `Bearer ${expectedToken}`) {
-      await emitMetric("PresignURLUnauthorized");
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: "Unauthorized" }),
-      };
-    }
+    await emitMetric("GetFilesRequests");
 
     const query = event.queryStringParameters ?? {};
     const id = query.id;
@@ -101,10 +88,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    const images = data.Items.map((item) => {
+    const files = data.Items.map((item) => {
       const fileKey = (item as any).file_key as string | undefined;
 
-      const imageUrl =
+      const url =
         fileKey
           ? S3.getSignedUrl("getObject", {
               Bucket: UPLOAD_BUCKET,
@@ -115,20 +102,23 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
       return {
         filename: (item as any).filename,
+        file_key: (item as any).fileKey,
         uploaded_timestamp: (item as any).uploaded_timestamp,
-        file_size: (item as any).file_size,
-        image_url: imageUrl,
+        size: (item as any).file_size,
+        url: url,
         ...(typeof (item as any).metadata === "object" && (item as any).metadata ? (item as any).metadata : {}),
       };
     });
 
+    await emitMetric("GetFilesSuccess");
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify({ images }),
+      body: JSON.stringify({ files }),
     };
   } catch (err) {
     console.error("Error fetching data:", err);
+    await emitMetric("GetFilesFailed");
     return {
       statusCode: 500,
       headers: corsHeaders,

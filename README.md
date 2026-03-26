@@ -7,9 +7,6 @@
 
 ![Staging Apply](https://github.com/lrasata/infra-file-uploader/actions/workflows/apply-to-staging-or-prod.yml/badge.svg)
 
-> 🚧 **v1.7.0-beta.x**  
-> This version is only provided for demo purposes
-
 ## Overview
 
 This project provides a **Terraform module** that allows clients to upload files securely to AWS.
@@ -32,11 +29,6 @@ This infrastructure is **100% serverless**.
 
 <img src="docs/upload-file-infra-v1.7.0.png" alt="file-uploader-infrastructure">
 
-> 🚧 **Demo Notes:**  
-> A lightweight Lambda **proxy** layer simulates a backend authorizer.
-> - Prevents exposing API secrets to the frontend
-> - In production, replace with **Cognito Authorizer** on API Gateway
-
 ## Usage
 
 Use in a terraform project by importing the module:
@@ -48,7 +40,6 @@ module "file_uploader" {
   region                                        = var.region
   environment                                   = var.environment
   api_file_upload_domain_name                   = var.api_file_upload_domain_name
-  secret_store_name                             = var.secret_store_name
   backend_certificate_arn                       = var.backend_certificate_arn
   uploads_bucket_name                           = var.uploads_bucket_name
   enable_transfer_acceleration                  = var.enable_transfer_acceleration
@@ -95,26 +86,22 @@ origin_bucket_arn = module.file_uploader.uploads_bucket_arn
 
 ### Accessing objects in the private S3 uploads bucket
 
-> 🚧 **v1.7.0-beta.x**  
-> This version is only provided for demo purposes
+All API endpoints are protected by a **Cognito JWT Authorizer** configured on API Gateway. Every request must include a valid Cognito-issued Bearer token in the `Authorization` header.
 
-For this project, we use a **Lambda proxy** to handle secure access to S3 objects.
+- To **upload a file**, call `GET /upload` with the required query parameters. The Lambda returns a **presigned S3 URL** that the client uses to PUT the file directly to S3.
+- To **list files**, call `GET /files`. The Lambda queries DynamoDB for metadata and returns each file with a **presigned S3 URL** for direct download.
 
-- To **upload files**, use the `/upload-proxy` endpoint.
-- To **fetch files**, use the `/files-proxy` endpoint.
-
-This proxy currently handles request forwarding and signing presigned URLs for S3, keeping the bucket private.  
-In a production deployment, you could replace this proxy with a proper authentication layer such as **API Gateway + Cognito Authorizer** or a **CloudFront distribution with signed URLs**, depending on your security requirements.
+The S3 bucket remains fully private — no object is ever publicly accessible. All access is time-limited via presigned URLs.
 
 
 ## Key attributes
 
 ### Security
 
+- **Cognito JWT Authorizer** on API Gateway protects all endpoints. Requests without a valid Cognito-issued Bearer token are rejected before reaching any Lambda.
 - **Presigned URLs** are used for uploads and downloads, granting temporary, time-limited access to specific objects without exposing AWS credentials.
 - All files are stored in **S3 encrypted with SSE-KMS using Customer Managed Keys (CMK)**  at rest.
 - **Public access blocked** on the S3 uploads bucket to prevent unauthorized access.
-- **WAF** is attached to API Gateway to filter out bad traffic (bots, throttling, sql injection, etc.).
 - Optional **BucketAV integration** to scan for malware before files are processed.
     - BucketAV scan is triggered after each upload and by default it deletes any infected file. (This behaviour can be
       changed in BucketAV settings)
@@ -176,14 +163,17 @@ This validates that uploads → events → Lambda chain is functioning correctly
 
 ### API Gateway Metrics
 
-| Metric                          | Unit  | Description                            |
-|---------------------------------|-------|----------------------------------------|
-| **PresignURLRequests**          | Count | Total number of presigned URL requests |
-| **PresignURLSuccess**           | Count | Track healthy traffic levels           |
-| **PresignURLFailed**            | Count | Detect permission/config issues        |
-| **Latency**                     | ms    | Identify slow API behavior             |
-| **5XXError (Cloudwatch Alarm)** | Count | API internal server failures           |
-| **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests   |
+| Metric                          | Unit  | Description                              |
+|---------------------------------|-------|------------------------------------------|
+| **PresignURLRequests**          | Count | Total presigned URL requests (`/upload`) |
+| **PresignURLSuccess**           | Count | Successful presigned URL generations     |
+| **PresignURLFailed**            | Count | Detect permission/config issues          |
+| **GetFilesRequests**            | Count | Total file listing requests (`/files`)   |
+| **GetFilesSuccess**             | Count | Successful file listing responses        |
+| **GetFilesFailed**              | Count | File listing errors                      |
+| **Latency**                     | ms    | Identify slow API behavior               |
+| **5XXError (Cloudwatch Alarm)** | Count | API internal server failures             |
+| **4XXError (Cloudwatch Alarm)** | Count | Authentication or malformed requests     |
 
 ### DynamoDB Metadata writer Metrics
 

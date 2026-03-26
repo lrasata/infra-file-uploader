@@ -1,5 +1,5 @@
 resource "aws_kms_key" "sns_cmk" {
-  description         = "SNS CMK"
+  description         = "SNS CMK - ${var.service_name}"
   enable_key_rotation = true
 }
 
@@ -16,6 +16,7 @@ resource "aws_sns_topic" "alerts" {
 }
 
 resource "aws_sns_topic_subscription" "alerts_email" {
+  count     = var.notification_email != "" ? 1 : 0
   topic_arn = aws_sns_topic.alerts.arn
   protocol  = "email"
   endpoint  = var.notification_email

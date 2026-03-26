@@ -42,3 +42,16 @@ variable "logs_retention_in_days" {
   type        = number
   default     = 30
 }
+
+variable "cloudfront_domain_name" {
+  description = "The  domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  type = string
+}
+
+variable "cognito_user_pool_id" {
+  type = string
+}

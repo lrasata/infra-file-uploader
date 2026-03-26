@@ -57,11 +57,6 @@ variable "lambda_memory_size_mb" {
   default     = 512
 }
 
-variable "secret_store_name" {
-  description = "Name of the secret store where API_GW_AUTH_SECRET value can be fetched"
-  type        = string
-}
-
 variable "route53_zone_name" {
   description = "Route 53 zone name (e.g., epic-trip-planner.com)"
   type        = string
@@ -75,5 +70,20 @@ variable "app_id" {
 
 variable "notification_email" {
   description = "Email address for notifications"
+  type        = string
+}
+
+variable "cloudfront_domain_name" {
+  description = "The domain name for CloudFront distribution for CORS settings"
+  type        = string
+}
+
+variable "cognito_user_pool_id" {
+  description = "The Cognito User Pool ID"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  description = "The Cognito User Pool Client ID"
   type        = string
 }
