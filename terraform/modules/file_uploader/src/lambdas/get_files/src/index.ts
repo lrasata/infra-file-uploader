@@ -84,7 +84,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return {
         statusCode: 404,
         headers: corsHeaders,
-        body: JSON.stringify({ error: "No images found" }),
+        body: JSON.stringify({ error: "No files found" }),
       };
     }
 
@@ -102,7 +102,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
       return {
         filename: (item as any).filename,
-        file_key: (item as any).fileKey,
+        file_key: (item as any).file_key,
         uploaded_timestamp: (item as any).uploaded_timestamp,
         size: (item as any).file_size,
         url: url,

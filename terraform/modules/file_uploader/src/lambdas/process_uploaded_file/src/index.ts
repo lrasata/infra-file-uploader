@@ -87,7 +87,7 @@ export const handler = async (event: unknown) => {
 
       const snsMessage = JSON.parse(event.Records[0].Sns.Message) as BucketAvSnsMessage;
       bucket = snsMessage.bucket;
-      fileKey = decodeURIComponent(snsMessage.key);
+      fileKey = decodeURIComponent(snsMessage.key.replace(/\+/g, " "));
 
       const uploadFolder = UPLOAD_FOLDER.trim().toLowerCase();
       if (!fileKey.toLowerCase().startsWith(uploadFolder)) {
@@ -106,7 +106,7 @@ export const handler = async (event: unknown) => {
       }
 
       bucket = event.Records[0].s3.bucket.name;
-      fileKey = decodeURIComponent(event.Records[0].s3.object.key);
+      fileKey = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
     }
 
     const keyParts = fileKey.split("/");
