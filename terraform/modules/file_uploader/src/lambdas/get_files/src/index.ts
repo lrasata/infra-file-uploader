@@ -101,12 +101,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           : undefined;
 
       return {
-        filename: (item as any).filename,
-        file_key: (item as any).file_key,
-        uploaded_timestamp: (item as any).uploaded_timestamp,
-        size: (item as any).file_size,
-        url: url,
-        ...(typeof (item as any).metadata === "object" && (item as any).metadata ? (item as any).metadata : {}),
+        ...item,
+        url,
       };
     });
 

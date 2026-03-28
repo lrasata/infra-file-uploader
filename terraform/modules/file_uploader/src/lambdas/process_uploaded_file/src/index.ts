@@ -188,6 +188,7 @@ export const handler = async (event: unknown) => {
             uploaded_timestamp: new Date().toISOString(),
             file_size: contentLength,
             selected: true,
+            status: "pending"
           },
         },
       });
